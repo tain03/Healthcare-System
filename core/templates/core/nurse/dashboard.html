@@ -1,0 +1,31 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Nurse Dashboard - Healthcare System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Nurse Dashboard</h1>
+    <p class="lead">Welcome, {{ user.get_full_name|default:user.username }}!</p>
+
+    <div class="row mt-4">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Today's Appointments</h5>
+                    <p class="card-text">View all appointments scheduled for today.</p>
+                    <a href="{% url 'core:nurse_appointments' %}" class="btn btn-primary">View Appointments</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Patients</h5>
+                    <p class="card-text">Access patient information and records.</p>
+                    <a href="{% url 'core:nurse_patients' %}" class="btn btn-primary">View Patients</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

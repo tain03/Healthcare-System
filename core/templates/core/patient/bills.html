@@ -1,0 +1,112 @@
+{% extends 'core/base.html' %}
+{% load core_extras %}
+
+{% block title %}Bills - Healthcare System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">My Bills</h1>
+
+    {% if bills %}
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">Pending Bills</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Bill #</th>
+                                    <th>Description</th>
+                                    <th>Amount</th>
+                                    <th>Insurance Coverage</th>
+                                    <th>Your Responsibility</th>
+                                    <th>Due Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for bill in bills %}
+                                {% if bill.status == 'pending' or bill.status == 'overdue' %}
+                                <tr>
+                                    <td>{{ bill.id }}</td>
+                                    <td>{{ bill.description }}</td>
+                                    <td>${{ bill.amount }}</td>
+                                    <td>${{ bill.insurance_coverage }}</td>
+                                    <td>${{ bill.amount|sub:bill.insurance_coverage }}</td>
+                                    <td>{{ bill.due_date }}</td>
+                                    <td>
+                                        {% if bill.status == 'pending' %}
+                                        <span class="badge bg-warning">{{ bill.get_status_display }}</span>
+                                        {% elif bill.status == 'overdue' %}
+                                        <span class="badge bg-danger">{{ bill.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'core:pay_bill' bill.id %}" class="btn btn-sm btn-primary">Pay Now</a>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Paid Bills</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Bill #</th>
+                                    <th>Description</th>
+                                    <th>Amount</th>
+                                    <th>Insurance Coverage</th>
+                                    <th>Your Payment</th>
+                                    <th>Due Date</th>
+                                    <th>Paid Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for bill in bills %}
+                                {% if bill.status == 'paid' %}
+                                <tr>
+                                    <td>{{ bill.id }}</td>
+                                    <td>{{ bill.description }}</td>
+                                    <td>${{ bill.amount }}</td>
+                                    <td>${{ bill.insurance_coverage }}</td>
+                                    <td>${{ bill.amount|sub:bill.insurance_coverage }}</td>
+                                    <td>{{ bill.due_date }}</td>
+                                    <td>{{ bill.paid_date }}</td>
+                                    <td>
+                                        <span class="badge bg-success">{{ bill.get_status_display }}</span>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <p>You don't have any bills yet.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

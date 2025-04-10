@@ -1,0 +1,31 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Administrator Dashboard - Healthcare System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Administrator Dashboard</h1>
+    <p class="lead">Welcome, {{ user.get_full_name|default:user.username }}!</p>
+
+    <div class="row mt-4">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Manage Users</h5>
+                    <p class="card-text">View and manage all system users.</p>
+                    <a href="{% url 'core:admin_users' %}" class="btn btn-primary">Manage Users</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Add User</h5>
+                    <p class="card-text">Create a new user account.</p>
+                    <a href="{% url 'core:admin_add_user' %}" class="btn btn-primary">Add User</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

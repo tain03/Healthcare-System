@@ -1,0 +1,305 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Patient Details - Healthcare System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Patient Details</h1>
+        <div class="btn-group">
+            <a href="{% url 'core:add_medical_record' %}?patient={{ patient.id }}" class="btn btn-primary">Add Medical Record</a>
+            <a href="{% url 'core:add_prescription' %}?patient={{ patient.id }}" class="btn btn-primary">Add Prescription</a>
+            <a href="{% url 'core:order_lab_test' %}?patient={{ patient.id }}" class="btn btn-primary">Order Lab Test</a>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Patient Information -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Patient Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h4>{{ patient.user.get_full_name }}</h4>
+                    </div>
+                    <div class="mb-2">
+                        <strong>Email:</strong> {{ patient.user.email }}
+                    </div>
+                    <div class="mb-2">
+                        <strong>Phone:</strong> {{ patient.user.phone_number|default:"Not provided" }}
+                    </div>
+                    <div class="mb-2">
+                        <strong>Date of Birth:</strong> {{ patient.user.date_of_birth|default:"Not provided" }}
+                    </div>
+                    <div class="mb-2">
+                        <strong>Blood Group:</strong> {{ patient.blood_group|default:"Not provided" }}
+                    </div>
+                    <div class="mb-2">
+                        <strong>Allergies:</strong> {{ patient.allergies|default:"None" }}
+                    </div>
+                    <div class="mb-2">
+                        <strong>Address:</strong> {{ patient.user.address|default:"Not provided" }}
+                    </div>
+                    <div class="mb-2">
+                        <strong>Emergency Contact:</strong> {{ patient.emergency_contact_name|default:"Not provided" }}
+                    </div>
+                    <div class="mb-2">
+                        <strong>Emergency Phone:</strong> {{ patient.emergency_contact_number|default:"Not provided" }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Appointments -->
+        <div class="col-md-8 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Appointments</h5>
+                </div>
+                <div class="card-body">
+                    {% if appointments %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Reason</th>
+                                    <th>Status</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for appointment in appointments %}
+                                <tr>
+                                    <td>{{ appointment.date }}</td>
+                                    <td>{{ appointment.time }}</td>
+                                    <td>{{ appointment.reason }}</td>
+                                    <td>
+                                        {% if appointment.status == 'scheduled' %}
+                                        <span class="badge bg-primary">{{ appointment.get_status_display }}</span>
+                                        {% elif appointment.status == 'completed' %}
+                                        <span class="badge bg-success">{{ appointment.get_status_display }}</span>
+                                        {% elif appointment.status == 'cancelled' %}
+                                        <span class="badge bg-danger">{{ appointment.get_status_display }}</span>
+                                        {% elif appointment.status == 'no_show' %}
+                                        <span class="badge bg-warning">{{ appointment.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ appointment.notes|default:"No notes" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p>No appointments found for this patient.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Medical Records -->
+        <div class="col-md-12 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Medical Records</h5>
+                    <a href="{% url 'core:add_medical_record' %}?patient={{ patient.id }}" class="btn btn-sm btn-light">Add Record</a>
+                </div>
+                <div class="card-body">
+                    {% if medical_records %}
+                    <div class="accordion" id="medicalRecordsAccordion">
+                        {% for record in medical_records %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading{{ record.id }}">
+                                <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ record.id }}" aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="collapse{{ record.id }}">
+                                    <div class="d-flex justify-content-between w-100 me-3">
+                                        <span>{{ record.date }} - {{ record.diagnosis|truncatechars:50 }}</span>
+                                        <span class="text-muted">Dr. {{ record.doctor.user.get_full_name }}</span>
+                                    </div>
+                                </button>
+                            </h2>
+                            <div id="collapse{{ record.id }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" aria-labelledby="heading{{ record.id }}" data-bs-parent="#medicalRecordsAccordion">
+                                <div class="accordion-body">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Diagnosis</h5>
+                                            <p class="card-text">{{ record.diagnosis }}</p>
+                                            
+                                            <h5 class="card-title mt-4">Treatment</h5>
+                                            <p class="card-text">{{ record.treatment }}</p>
+                                            
+                                            {% if record.notes %}
+                                            <h5 class="card-title mt-4">Additional Notes</h5>
+                                            <p class="card-text">{{ record.notes }}</p>
+                                            {% endif %}
+                                            
+                                            <div class="mt-4">
+                                                <p class="text-muted mb-0">
+                                                    <strong>Doctor:</strong> {{ record.doctor }}
+                                                </p>
+                                                <p class="text-muted mb-0">
+                                                    <strong>Date:</strong> {{ record.date }}
+                                                </p>
+                                                <p class="text-muted">
+                                                    <strong>Last Updated:</strong> {{ record.updated_at }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p>No medical records found for this patient.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Prescriptions -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Prescriptions</h5>
+                    <a href="{% url 'core:add_prescription' %}?patient={{ patient.id }}" class="btn btn-sm btn-light">Add Prescription</a>
+                </div>
+                <div class="card-body">
+                    {% if prescriptions %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Medication</th>
+                                    <th>Dosage</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for prescription in prescriptions %}
+                                <tr>
+                                    <td>{{ prescription.medication_name }}</td>
+                                    <td>{{ prescription.dosage }} - {{ prescription.frequency }}</td>
+                                    <td>{{ prescription.date_prescribed }}</td>
+                                    <td>
+                                        {% if prescription.status == 'active' %}
+                                        <span class="badge bg-primary">{{ prescription.get_status_display }}</span>
+                                        {% elif prescription.status == 'filled' %}
+                                        <span class="badge bg-success">{{ prescription.get_status_display }}</span>
+                                        {% elif prescription.status == 'expired' %}
+                                        <span class="badge bg-warning">{{ prescription.get_status_display }}</span>
+                                        {% elif prescription.status == 'cancelled' %}
+                                        <span class="badge bg-danger">{{ prescription.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p>No prescriptions found for this patient.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Lab Tests -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Lab Tests</h5>
+                    <a href="{% url 'core:order_lab_test' %}?patient={{ patient.id }}" class="btn btn-sm btn-light">Order Test</a>
+                </div>
+                <div class="card-body">
+                    {% if lab_tests %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Test Name</th>
+                                    <th>Ordered Date</th>
+                                    <th>Status</th>
+                                    <th>Results</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for test in lab_tests %}
+                                <tr>
+                                    <td>{{ test.test_name }}</td>
+                                    <td>{{ test.ordered_date }}</td>
+                                    <td>
+                                        {% if test.status == 'ordered' %}
+                                        <span class="badge bg-primary">{{ test.get_status_display }}</span>
+                                        {% elif test.status == 'sample_collected' %}
+                                        <span class="badge bg-info">{{ test.get_status_display }}</span>
+                                        {% elif test.status == 'in_progress' %}
+                                        <span class="badge bg-warning">{{ test.get_status_display }}</span>
+                                        {% elif test.status == 'completed' %}
+                                        <span class="badge bg-success">{{ test.get_status_display }}</span>
+                                        {% elif test.status == 'cancelled' %}
+                                        <span class="badge bg-danger">{{ test.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if test.status == 'completed' %}
+                                        <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#resultModal{{ test.id }}">View Results</button>
+                                        
+                                        <!-- Results Modal -->
+                                        <div class="modal fade" id="resultModal{{ test.id }}" tabindex="-1" aria-labelledby="resultModalLabel{{ test.id }}" aria-hidden="true">
+                                            <div class="modal-dialog modal-lg">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="resultModalLabel{{ test.id }}">{{ test.test_name }} Results</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <div class="card">
+                                                            <div class="card-body">
+                                                                <h6>Test Details</h6>
+                                                                <p><strong>Test Name:</strong> {{ test.test_name }}</p>
+                                                                <p><strong>Description:</strong> {{ test.description }}</p>
+                                                                <p><strong>Ordered Date:</strong> {{ test.ordered_date }}</p>
+                                                                <p><strong>Result Date:</strong> {{ test.result_date }}</p>
+                                                                <p><strong>Conducted By:</strong> {{ test.lab_technician|default:"Not specified" }}</p>
+                                                                
+                                                                <h6 class="mt-4">Results</h6>
+                                                                <div class="card">
+                                                                    <div class="card-body bg-light">
+                                                                        <pre>{{ test.result }}</pre>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% else %}
+                                        <span class="text-muted">Not available</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p>No lab tests found for this patient.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

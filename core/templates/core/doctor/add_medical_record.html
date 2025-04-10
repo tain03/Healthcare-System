@@ -1,0 +1,80 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Add Medical Record - Healthcare System{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Add Medical Record</h1>
+    
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Medical Record Details</h5>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label for="patient" class="form-label">Patient</label>
+                    <select class="form-select" id="patient" name="patient" required {% if selected_patient %}disabled{% endif %}>
+                        <option value="">-- Select a Patient --</option>
+                        {% for patient in patients %}
+                        <option value="{{ patient.id }}" {% if selected_patient and selected_patient.id == patient.id %}selected{% endif %}>
+                            {{ patient.user.get_full_name }} ({{ patient.user.email }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                    {% if selected_patient %}
+                    <input type="hidden" name="patient" value="{{ selected_patient.id }}">
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    <label for="date" class="form-label">Date</label>
+                    <input type="date" class="form-control" id="date" name="date" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="diagnosis" class="form-label">Diagnosis</label>
+                    <textarea class="form-control" id="diagnosis" name="diagnosis" rows="3" required></textarea>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="treatment" class="form-label">Treatment</label>
+                    <textarea class="form-control" id="treatment" name="treatment" rows="3" required></textarea>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="notes" class="form-label">Additional Notes</label>
+                    <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">Add Medical Record</button>
+                    {% if selected_patient %}
+                    <a href="{% url 'core:doctor_patient_detail' selected_patient.id %}" class="btn btn-secondary">Cancel</a>
+                    {% else %}
+                    <a href="{% url 'core:doctor_patients' %}" class="btn btn-secondary">Cancel</a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize date picker
+        flatpickr("#date", {
+            defaultDate: "today"
+        });
+    });
+</script>
+{% endblock %}

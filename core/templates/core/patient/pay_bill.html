@@ -1,0 +1,124 @@
+{% extends 'core/base.html' %}
+{% load core_extras %}
+
+{% block title %}Pay Bill - Healthcare System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Pay Bill</h1>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Bill Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Bill #:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            {{ bill.id }}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Description:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            {{ bill.description }}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Total Amount:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            ${{ bill.amount }}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Insurance Coverage:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            ${{ bill.insurance_coverage }}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Your Responsibility:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            ${{ bill.amount|sub:bill.insurance_coverage }}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Due Date:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            {{ bill.due_date }}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Status:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            {% if bill.status == 'pending' %}
+                            <span class="badge bg-warning">{{ bill.get_status_display }}</span>
+                            {% elif bill.status == 'overdue' %}
+                            <span class="badge bg-danger">{{ bill.get_status_display }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Payment</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="cardNumber" class="form-label">Card Number</label>
+                            <input type="text" class="form-control" id="cardNumber" placeholder="1234 5678 9012 3456" required>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="expiryDate" class="form-label">Expiry Date</label>
+                                <input type="text" class="form-control" id="expiryDate" placeholder="MM/YY" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="cvv" class="form-label">CVV</label>
+                                <input type="text" class="form-control" id="cvv" placeholder="123" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="cardholderName" class="form-label">Cardholder Name</label>
+                            <input type="text" class="form-control" id="cardholderName" placeholder="John Doe" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="amount" class="form-label">Amount to Pay</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="text" class="form-control" id="amount" value="{{ bill.amount|sub:bill.insurance_coverage }}" readonly>
+                            </div>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success">Pay Now</button>
+                            <a href="{% url 'core:patient_bills' %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

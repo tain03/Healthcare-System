@@ -1,0 +1,91 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Add Prescription - Healthcare System{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Add Prescription</h1>
+    
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Prescription Details</h5>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label for="patient" class="form-label">Patient</label>
+                    <select class="form-select" id="patient" name="patient" required {% if selected_patient %}disabled{% endif %}>
+                        <option value="">-- Select a Patient --</option>
+                        {% for patient in patients %}
+                        <option value="{{ patient.id }}" {% if selected_patient and selected_patient.id == patient.id %}selected{% endif %}>
+                            {{ patient.user.get_full_name }} ({{ patient.user.email }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                    {% if selected_patient %}
+                    <input type="hidden" name="patient" value="{{ selected_patient.id }}">
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    <label for="medication_name" class="form-label">Medication Name</label>
+                    <input type="text" class="form-control" id="medication_name" name="medication_name" required>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="dosage" class="form-label">Dosage</label>
+                        <input type="text" class="form-control" id="dosage" name="dosage" placeholder="e.g., 500mg" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="frequency" class="form-label">Frequency</label>
+                        <input type="text" class="form-control" id="frequency" name="frequency" placeholder="e.g., Twice daily" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="duration" class="form-label">Duration</label>
+                        <input type="text" class="form-control" id="duration" name="duration" placeholder="e.g., 7 days" required>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="notes" class="form-label">Notes</label>
+                    <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Special instructions or notes"></textarea>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="expiry_date" class="form-label">Expiry Date</label>
+                    <input type="date" class="form-control" id="expiry_date" name="expiry_date" required>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">Add Prescription</button>
+                    {% if selected_patient %}
+                    <a href="{% url 'core:doctor_patient_detail' selected_patient.id %}" class="btn btn-secondary">Cancel</a>
+                    {% else %}
+                    <a href="{% url 'core:doctor_patients' %}" class="btn btn-secondary">Cancel</a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize date picker for expiry date
+        flatpickr("#expiry_date", {
+            minDate: "today",
+            defaultDate: new Date().fp_incr(30) // Default to 30 days from now
+        });
+    });
+</script>
+{% endblock %}

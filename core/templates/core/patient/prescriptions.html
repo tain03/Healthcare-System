@@ -1,0 +1,113 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Prescriptions - Healthcare System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">My Prescriptions</h1>
+    
+    {% if prescriptions %}
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Active Prescriptions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Medication</th>
+                                    <th>Dosage</th>
+                                    <th>Frequency</th>
+                                    <th>Duration</th>
+                                    <th>Prescribed By</th>
+                                    <th>Date Prescribed</th>
+                                    <th>Expiry Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for prescription in prescriptions %}
+                                {% if prescription.status == 'active' or prescription.status == 'filled' %}
+                                <tr>
+                                    <td>{{ prescription.medication_name }}</td>
+                                    <td>{{ prescription.dosage }}</td>
+                                    <td>{{ prescription.frequency }}</td>
+                                    <td>{{ prescription.duration }}</td>
+                                    <td>{{ prescription.doctor }}</td>
+                                    <td>{{ prescription.date_prescribed }}</td>
+                                    <td>{{ prescription.expiry_date }}</td>
+                                    <td>
+                                        {% if prescription.status == 'active' %}
+                                        <span class="badge bg-primary">{{ prescription.get_status_display }}</span>
+                                        {% elif prescription.status == 'filled' %}
+                                        <span class="badge bg-success">{{ prescription.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">Past Prescriptions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Medication</th>
+                                    <th>Dosage</th>
+                                    <th>Frequency</th>
+                                    <th>Duration</th>
+                                    <th>Prescribed By</th>
+                                    <th>Date Prescribed</th>
+                                    <th>Expiry Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for prescription in prescriptions %}
+                                {% if prescription.status == 'expired' or prescription.status == 'cancelled' %}
+                                <tr>
+                                    <td>{{ prescription.medication_name }}</td>
+                                    <td>{{ prescription.dosage }}</td>
+                                    <td>{{ prescription.frequency }}</td>
+                                    <td>{{ prescription.duration }}</td>
+                                    <td>{{ prescription.doctor }}</td>
+                                    <td>{{ prescription.date_prescribed }}</td>
+                                    <td>{{ prescription.expiry_date }}</td>
+                                    <td>
+                                        {% if prescription.status == 'expired' %}
+                                        <span class="badge bg-warning">{{ prescription.get_status_display }}</span>
+                                        {% elif prescription.status == 'cancelled' %}
+                                        <span class="badge bg-danger">{{ prescription.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <p>You don't have any prescriptions yet.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

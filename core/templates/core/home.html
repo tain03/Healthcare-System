@@ -1,0 +1,110 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Home - Healthcare System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-12 text-center mb-5">
+            <h1 class="display-4">Welcome to Healthcare System</h1>
+            <p class="lead">A comprehensive healthcare management solution for patients, doctors, and healthcare providers.</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h3 class="card-title">For Patients</h3>
+                    <p class="card-text">
+                        Book appointments, view medical records, manage prescriptions, and pay bills online.
+                    </p>
+                    {% if not user.is_authenticated %}
+                    <a href="{% url 'core:register' %}" class="btn btn-primary">Register as Patient</a>
+                    {% elif user.user_type == 'patient' %}
+                    <a href="{% url 'core:dashboard' %}" class="btn btn-primary">Go to Dashboard</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h3 class="card-title">For Doctors</h3>
+                    <p class="card-text">
+                        Manage appointments, access patient records, prescribe treatments, and order lab tests.
+                    </p>
+                    {% if not user.is_authenticated %}
+                    <a href="{% url 'core:register' %}" class="btn btn-primary">Register as Doctor</a>
+                    {% elif user.user_type == 'doctor' %}
+                    <a href="{% url 'core:dashboard' %}" class="btn btn-primary">Go to Dashboard</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h3 class="card-title">For Healthcare Staff</h3>
+                    <p class="card-text">
+                        Specialized interfaces for nurses, administrators, pharmacists, lab technicians, and insurance providers.
+                    </p>
+                    {% if not user.is_authenticated %}
+                    <a href="{% url 'core:register' %}" class="btn btn-primary">Register as Staff</a>
+                    {% elif user.user_type != 'patient' and user.user_type != 'doctor' %}
+                    <a href="{% url 'core:dashboard' %}" class="btn btn-primary">Go to Dashboard</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-md-12">
+            <h2 class="text-center mb-4">Our Features</h2>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Appointment Scheduling</h4>
+                    <p class="card-text">
+                        Easy and convenient online appointment booking system. Choose your preferred doctor and time slot.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Electronic Health Records</h4>
+                    <p class="card-text">
+                        Secure access to your complete medical history, diagnoses, treatments, and test results.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Prescription Management</h4>
+                    <p class="card-text">
+                        Digital prescriptions that can be sent directly to pharmacies. View your medication history anytime.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Billing and Insurance</h4>
+                    <p class="card-text">
+                        Transparent billing system with insurance claim processing and online payment options.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

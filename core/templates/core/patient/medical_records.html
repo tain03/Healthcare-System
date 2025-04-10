@@ -1,0 +1,60 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Medical Records - Healthcare System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">My Medical Records</h1>
+    
+    {% if medical_records %}
+    <div class="accordion" id="medicalRecordsAccordion">
+        {% for record in medical_records %}
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="heading{{ record.id }}">
+                <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ record.id }}" aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="collapse{{ record.id }}">
+                    <div class="d-flex justify-content-between w-100 me-3">
+                        <span>{{ record.date }} - {{ record.diagnosis|truncatechars:50 }}</span>
+                        <span class="text-muted">Dr. {{ record.doctor.user.get_full_name }}</span>
+                    </div>
+                </button>
+            </h2>
+            <div id="collapse{{ record.id }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" aria-labelledby="heading{{ record.id }}" data-bs-parent="#medicalRecordsAccordion">
+                <div class="accordion-body">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Diagnosis</h5>
+                            <p class="card-text">{{ record.diagnosis }}</p>
+                            
+                            <h5 class="card-title mt-4">Treatment</h5>
+                            <p class="card-text">{{ record.treatment }}</p>
+                            
+                            {% if record.notes %}
+                            <h5 class="card-title mt-4">Additional Notes</h5>
+                            <p class="card-text">{{ record.notes }}</p>
+                            {% endif %}
+                            
+                            <div class="mt-4">
+                                <p class="text-muted mb-0">
+                                    <strong>Doctor:</strong> {{ record.doctor }}
+                                </p>
+                                <p class="text-muted mb-0">
+                                    <strong>Date:</strong> {{ record.date }}
+                                </p>
+                                <p class="text-muted">
+                                    <strong>Last Updated:</strong> {{ record.updated_at }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <p>You don't have any medical records yet.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

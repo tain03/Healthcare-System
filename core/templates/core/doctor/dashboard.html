@@ -1,0 +1,58 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Doctor Dashboard - Healthcare System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Doctor Dashboard</h1>
+    <p class="lead">Welcome, Dr. {{ user.get_full_name|default:user.username }}!</p>
+
+    <div class="row mt-4">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Today's Appointments</h5>
+                    <p class="card-text">View and manage your appointments for today.</p>
+                    <a href="{% url 'core:doctor_appointments' %}" class="btn btn-primary">View Appointments</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">My Patients</h5>
+                    <p class="card-text">Access your patients' records and information.</p>
+                    <a href="{% url 'core:doctor_patients' %}" class="btn btn-primary">View Patients</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Add Prescription</h5>
+                    <p class="card-text">Create a new prescription for a patient.</p>
+                    <a href="{% url 'core:add_prescription' %}" class="btn btn-primary">Add Prescription</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Add Medical Record</h5>
+                    <p class="card-text">Create a new medical record entry for a patient.</p>
+                    <a href="{% url 'core:add_medical_record' %}" class="btn btn-primary">Add Record</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Order Lab Test</h5>
+                    <p class="card-text">Order a new lab test for a patient.</p>
+                    <a href="{% url 'core:order_lab_test' %}" class="btn btn-primary">Order Test</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

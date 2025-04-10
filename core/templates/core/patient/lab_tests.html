@@ -1,0 +1,109 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Lab Tests - Healthcare System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">My Lab Tests</h1>
+    
+    {% if lab_tests %}
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Pending Lab Tests</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Test Name</th>
+                                    <th>Description</th>
+                                    <th>Ordered By</th>
+                                    <th>Ordered Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for test in lab_tests %}
+                                {% if test.status != 'completed' and test.status != 'cancelled' %}
+                                <tr>
+                                    <td>{{ test.test_name }}</td>
+                                    <td>{{ test.description }}</td>
+                                    <td>{{ test.doctor }}</td>
+                                    <td>{{ test.ordered_date }}</td>
+                                    <td>
+                                        {% if test.status == 'ordered' %}
+                                        <span class="badge bg-primary">{{ test.get_status_display }}</span>
+                                        {% elif test.status == 'sample_collected' %}
+                                        <span class="badge bg-info">{{ test.get_status_display }}</span>
+                                        {% elif test.status == 'in_progress' %}
+                                        <span class="badge bg-warning">{{ test.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Completed Lab Tests</h5>
+                </div>
+                <div class="card-body">
+                    <div class="accordion" id="labTestsAccordion">
+                        {% for test in lab_tests %}
+                        {% if test.status == 'completed' %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading{{ test.id }}">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ test.id }}" aria-expanded="false" aria-controls="collapse{{ test.id }}">
+                                    <div class="d-flex justify-content-between w-100 me-3">
+                                        <span>{{ test.test_name }}</span>
+                                        <span class="text-muted">{{ test.result_date }}</span>
+                                    </div>
+                                </button>
+                            </h2>
+                            <div id="collapse{{ test.id }}" class="accordion-collapse collapse" aria-labelledby="heading{{ test.id }}" data-bs-parent="#labTestsAccordion">
+                                <div class="accordion-body">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Test Details</h5>
+                                            <p><strong>Test Name:</strong> {{ test.test_name }}</p>
+                                            <p><strong>Description:</strong> {{ test.description }}</p>
+                                            <p><strong>Ordered By:</strong> {{ test.doctor }}</p>
+                                            <p><strong>Ordered Date:</strong> {{ test.ordered_date }}</p>
+                                            <p><strong>Result Date:</strong> {{ test.result_date }}</p>
+                                            <p><strong>Conducted By:</strong> {{ test.lab_technician|default:"Not specified" }}</p>
+                                            
+                                            <h5 class="card-title mt-4">Test Results</h5>
+                                            <div class="card">
+                                                <div class="card-body bg-light">
+                                                    <pre>{{ test.result }}</pre>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <p>You don't have any lab tests yet.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

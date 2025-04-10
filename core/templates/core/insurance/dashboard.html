@@ -1,0 +1,22 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Insurance Provider Dashboard - Healthcare System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Insurance Provider Dashboard</h1>
+    <p class="lead">Welcome, {{ user.get_full_name|default:user.username }}!</p>
+
+    <div class="row mt-4">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Insurance Claims</h5>
+                    <p class="card-text">View and process insurance claims.</p>
+                    <a href="{% url 'core:insurance_claims' %}" class="btn btn-primary">View Claims</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

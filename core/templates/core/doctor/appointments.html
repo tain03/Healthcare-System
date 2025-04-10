@@ -1,0 +1,226 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Appointments - Healthcare System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">My Appointments</h1>
+    
+    <ul class="nav nav-tabs mb-4" id="appointmentTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="today-tab" data-bs-toggle="tab" data-bs-target="#today" type="button" role="tab" aria-controls="today" aria-selected="true">Today</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="upcoming-tab" data-bs-toggle="tab" data-bs-target="#upcoming" type="button" role="tab" aria-controls="upcoming" aria-selected="false">Upcoming</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="past-tab" data-bs-toggle="tab" data-bs-target="#past" type="button" role="tab" aria-controls="past" aria-selected="false">Past</button>
+        </li>
+    </ul>
+    
+    <div class="tab-content" id="appointmentTabsContent">
+        <!-- Today's Appointments -->
+        <div class="tab-pane fade show active" id="today" role="tabpanel" aria-labelledby="today-tab">
+            {% if today_appointments %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Patient</th>
+                            <th>Time</th>
+                            <th>Reason</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appointment in today_appointments %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'core:doctor_patient_detail' appointment.patient.id %}">
+                                    {{ appointment.patient }}
+                                </a>
+                            </td>
+                            <td>{{ appointment.time }}</td>
+                            <td>{{ appointment.reason }}</td>
+                            <td>
+                                {% if appointment.status == 'scheduled' %}
+                                <span class="badge bg-primary">{{ appointment.get_status_display }}</span>
+                                {% elif appointment.status == 'completed' %}
+                                <span class="badge bg-success">{{ appointment.get_status_display }}</span>
+                                {% elif appointment.status == 'cancelled' %}
+                                <span class="badge bg-danger">{{ appointment.get_status_display }}</span>
+                                {% elif appointment.status == 'no_show' %}
+                                <span class="badge bg-warning">{{ appointment.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if appointment.status == 'scheduled' %}
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Actions
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li>
+                                            <form method="post" action="{% url 'core:update_appointment_status' appointment.id %}">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="status" value="completed">
+                                                <button type="submit" class="dropdown-item">Mark as Completed</button>
+                                            </form>
+                                        </li>
+                                        <li>
+                                            <form method="post" action="{% url 'core:update_appointment_status' appointment.id %}">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="status" value="no_show">
+                                                <button type="submit" class="dropdown-item">Mark as No Show</button>
+                                            </form>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <a class="dropdown-item" href="{% url 'core:add_medical_record' %}?patient={{ appointment.patient.id }}">
+                                                Add Medical Record
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="{% url 'core:add_prescription' %}?patient={{ appointment.patient.id }}">
+                                                Add Prescription
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="{% url 'core:order_lab_test' %}?patient={{ appointment.patient.id }}">
+                                                Order Lab Test
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <p>You don't have any appointments scheduled for today.</p>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Upcoming Appointments -->
+        <div class="tab-pane fade" id="upcoming" role="tabpanel" aria-labelledby="upcoming-tab">
+            {% if upcoming_appointments %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Patient</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Reason</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appointment in upcoming_appointments %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'core:doctor_patient_detail' appointment.patient.id %}">
+                                    {{ appointment.patient }}
+                                </a>
+                            </td>
+                            <td>{{ appointment.date }}</td>
+                            <td>{{ appointment.time }}</td>
+                            <td>{{ appointment.reason }}</td>
+                            <td>
+                                <span class="badge bg-primary">{{ appointment.get_status_display }}</span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#cancelModal{{ appointment.id }}">Cancel</button>
+                                
+                                <!-- Cancel Modal -->
+                                <div class="modal fade" id="cancelModal{{ appointment.id }}" tabindex="-1" aria-labelledby="cancelModalLabel{{ appointment.id }}" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="cancelModalLabel{{ appointment.id }}">Cancel Appointment</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Are you sure you want to cancel this appointment with {{ appointment.patient }} on {{ appointment.date }} at {{ appointment.time }}?</p>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                <form method="post" action="{% url 'core:update_appointment_status' appointment.id %}">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="status" value="cancelled">
+                                                    <button type="submit" class="btn btn-danger">Cancel Appointment</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <p>You don't have any upcoming appointments.</p>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Past Appointments -->
+        <div class="tab-pane fade" id="past" role="tabpanel" aria-labelledby="past-tab">
+            {% if past_appointments %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Patient</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Reason</th>
+                            <th>Status</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appointment in past_appointments %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'core:doctor_patient_detail' appointment.patient.id %}">
+                                    {{ appointment.patient }}
+                                </a>
+                            </td>
+                            <td>{{ appointment.date }}</td>
+                            <td>{{ appointment.time }}</td>
+                            <td>{{ appointment.reason }}</td>
+                            <td>
+                                {% if appointment.status == 'completed' %}
+                                <span class="badge bg-success">{{ appointment.get_status_display }}</span>
+                                {% elif appointment.status == 'cancelled' %}
+                                <span class="badge bg-danger">{{ appointment.get_status_display }}</span>
+                                {% elif appointment.status == 'no_show' %}
+                                <span class="badge bg-warning">{{ appointment.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ appointment.notes|default:"No notes" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <p>You don't have any past appointments.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

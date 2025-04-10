@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Healthcare System{% endblock %}</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <style>
+        body {
+            padding-top: 60px;
+            padding-bottom: 40px;
+        }
+        .sidebar {
+            position: fixed;
+            top: 60px;
+            bottom: 0;
+            left: 0;
+            z-index: 100;
+            padding: 20px 0;
+            overflow-x: hidden;
+            overflow-y: auto;
+            background-color: #f8f9fa;
+            border-right: 1px solid #dee2e6;
+        }
+        .sidebar .nav-link {
+            font-weight: 500;
+            color: #333;
+        }
+        .sidebar .nav-link.active {
+            color: #007bff;
+        }
+        .main-content {
+            margin-left: 240px;
+            padding: 20px;
+        }
+        @media (max-width: 767.98px) {
+            .sidebar {
+                top: 5rem;
+            }
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-md navbar-dark bg-primary fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'core:home' %}">Healthcare System</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarCollapse">
+                <ul class="navbar-nav me-auto mb-2 mb-md-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'core:home' %}">Home</a>
+                    </li>
+                    {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'core:dashboard' %}">Dashboard</a>
+                    </li>
+                    {% endif %}
+                </ul>
+                <div class="d-flex">
+                    {% if user.is_authenticated %}
+                    <span class="navbar-text me-3">Welcome, {{ user.get_full_name|default:user.username }}</span>
+                    <a href="{% url 'core:logout' %}" class="btn btn-outline-light">Logout</a>
+                    {% else %}
+                    <a href="{% url 'core:login' %}" class="btn btn-outline-light me-2">Login</a>
+                    <a href="{% url 'core:register' %}" class="btn btn-light">Register</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            {% if user.is_authenticated %}
+            <!-- Sidebar -->
+            <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+                <div class="position-sticky pt-3">
+                    <ul class="nav flex-column">
+                        {% block sidebar %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'core:dashboard' %}">
+                                Dashboard
+                            </a>
+                        </li>
+                        {% if user.user_type == 'patient' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'core:patient_appointments' %}">
+                                My Appointments
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'core:book_appointment' %}">
+                                Book Appointment
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'core:patient_medical_records' %}">
+                                Medical Records
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'core:patient_prescriptions' %}">
+                                Prescriptions
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'core:patient_lab_tests' %}">
+                                Lab Tests
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'core:patient_bills' %}">
+                                Bills
+                            </a>
+                        </li>
+                        {% elif user.user_type == 'doctor' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'core:doctor_appointments' %}">
+                                Appointments
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'core:doctor_patients' %}">
+                                Patients
+                            </a>
+                        </li>
+                        {% elif user.user_type == 'nurse' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'core:nurse_patients' %}">
+                                Patients
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'core:nurse_appointments' %}">
+                                Today's Appointments
+                            </a>
+                        </li>
+                        {% elif user.user_type == 'admin' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'core:admin_users' %}">
+                                Manage Users
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'core:admin_add_user' %}">
+                                Add User
+                            </a>
+                        </li>
+                        {% elif user.user_type == 'pharmacist' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'core:pharmacist_prescriptions' %}">
+                                Prescriptions
+                            </a>
+                        </li>
+                        {% elif user.user_type == 'lab_tech' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'core:lab_tests' %}">
+                                Lab Tests
+                            </a>
+                        </li>
+                        {% elif user.user_type == 'insurance' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'core:insurance_claims' %}">
+                                Insurance Claims
+                            </a>
+                        </li>
+                        {% endif %}
+                        {% endblock %}
+                    </ul>
+                </div>
+            </nav>
+            <!-- Main content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+            {% else %}
+            <!-- Main content (full width when not logged in) -->
+            <main class="col-12 px-4">
+            {% endif %}
+                <!-- Messages -->
+                {% if messages %}
+                <div class="messages mt-3">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <!-- Page content -->
+                <div class="mt-4">
+                    {% block content %}{% endblock %}
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer mt-auto py-3 bg-light">
+        <div class="container">
+            <span class="text-muted">© 2023 Healthcare System. All rights reserved.</span>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

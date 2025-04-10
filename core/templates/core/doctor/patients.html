@@ -1,0 +1,102 @@
+{% extends 'core/base.html' %}
+
+{% block title %}My Patients - Healthcare System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">My Patients</h1>
+    
+    {% if patients %}
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped" id="patientsTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Contact</th>
+                            <th>Blood Group</th>
+                            <th>Last Visit</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for patient in patients %}
+                        <tr>
+                            <td>{{ patient.user.get_full_name }}</td>
+                            <td>
+                                <div>{{ patient.user.email }}</div>
+                                <div>{{ patient.user.phone_number|default:"No phone" }}</div>
+                            </td>
+                            <td>{{ patient.blood_group|default:"Not specified" }}</td>
+                            <td>
+                                {% if patient.last_appointment %}
+                                {{ patient.last_appointment.date }}
+                                {% else %}
+                                No visits yet
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'core:doctor_patient_detail' patient.id %}" class="btn btn-sm btn-primary">View Details</a>
+                                    <button type="button" class="btn btn-sm btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <span class="visually-hidden">Toggle Dropdown</span>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li>
+                                            <a class="dropdown-item" href="{% url 'core:add_medical_record' %}?patient={{ patient.id }}">
+                                                Add Medical Record
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="{% url 'core:add_prescription' %}?patient={{ patient.id }}">
+                                                Add Prescription
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="{% url 'core:order_lab_test' %}?patient={{ patient.id }}">
+                                                Order Lab Test
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <p>You don't have any patients yet.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add search functionality to the table
+        const searchInput = document.createElement('input');
+        searchInput.type = 'text';
+        searchInput.classList.add('form-control', 'mb-3');
+        searchInput.placeholder = 'Search patients...';
+        
+        const table = document.getElementById('patientsTable');
+        table.parentNode.insertBefore(searchInput, table);
+        
+        searchInput.addEventListener('keyup', function() {
+            const searchText = this.value.toLowerCase();
+            const rows = table.querySelectorAll('tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchText) ? '' : 'none';
+            });
+        });
+    });
+</script>
+{% endblock %}

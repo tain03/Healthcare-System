@@ -1,0 +1,67 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Patient Dashboard - Healthcare System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Patient Dashboard</h1>
+    <p class="lead">Welcome, {{ user.get_full_name|default:user.username }}!</p>
+
+    <div class="row mt-4">
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Upcoming Appointments</h5>
+                    <p class="card-text">View and manage your scheduled appointments.</p>
+                    <a href="{% url 'core:patient_appointments' %}" class="btn btn-primary">View Appointments</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Book Appointment</h5>
+                    <p class="card-text">Schedule a new appointment with a doctor.</p>
+                    <a href="{% url 'core:book_appointment' %}" class="btn btn-primary">Book Now</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Medical Records</h5>
+                    <p class="card-text">Access your complete medical history.</p>
+                    <a href="{% url 'core:patient_medical_records' %}" class="btn btn-primary">View Records</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Prescriptions</h5>
+                    <p class="card-text">View your current and past prescriptions.</p>
+                    <a href="{% url 'core:patient_prescriptions' %}" class="btn btn-primary">View Prescriptions</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Lab Tests</h5>
+                    <p class="card-text">Check your lab test orders and results.</p>
+                    <a href="{% url 'core:patient_lab_tests' %}" class="btn btn-primary">View Lab Tests</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Bills</h5>
+                    <p class="card-text">View and pay your medical bills.</p>
+                    <a href="{% url 'core:patient_bills' %}" class="btn btn-primary">View Bills</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
