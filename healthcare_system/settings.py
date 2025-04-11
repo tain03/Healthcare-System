@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'core',
+    'chat',
 ]
 
 MIDDLEWARE = [
@@ -130,3 +131,20 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Custom User Model
 AUTH_USER_MODEL = 'core.User'
+
+# LLM Settings
+# Set to True to use API, False to use local model
+LLM_USE_API = False
+# API key for external LLM service (if using API)
+LLM_API_KEY = ''
+# API URL for external LLM service (if using API)
+LLM_API_URL = 'http://localhost:8000/v1/completions'
+# Model name (used for both API and local model)
+LLM_MODEL_NAME = 'TinyLlama/TinyLlama-1.1B-Chat-v1.0'  # A small model that can run on modest hardware
+# Maximum tokens to generate
+LLM_MAX_TOKENS = 256
+# Temperature for generation (higher = more creative, lower = more deterministic)
+LLM_TEMPERATURE = 0.7
+# Probability threshold for rule-based vs LLM responses (0.0-1.0)
+# Higher values will use rule-based responses more often
+LLM_RULE_THRESHOLD = 1.0  # Always use rule-based responses

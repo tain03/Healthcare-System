@@ -6,6 +6,8 @@
     <title>{% block title %}Healthcare System{% endblock %}</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Custom CSS -->
     <style>
         body {
@@ -63,6 +65,12 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'core:dashboard' %}">Dashboard</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'chat:home' %}">
+                            <i class="fas fa-comments"></i> Chat
+                            <span class="badge bg-danger rounded-pill d-none" id="chatUnreadBadge">0</span>
+                        </a>
+                    </li>
                     {% endif %}
                 </ul>
                 <div class="d-flex">
@@ -88,7 +96,13 @@
                         {% block sidebar %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'core:dashboard' %}">
-                                Dashboard
+                                <i class="fas fa-tachometer-alt"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'chat:home' %}">
+                                <i class="fas fa-comments"></i> Chat
+                                <span class="badge bg-danger rounded-pill d-none" id="sidebarChatUnreadBadge">0</span>
                             </a>
                         </li>
                         {% if user.user_type == 'patient' %}
@@ -195,7 +209,7 @@
                     {% endfor %}
                 </div>
                 {% endif %}
-                
+
                 <!-- Page content -->
                 <div class="mt-4">
                     {% block content %}{% endblock %}
@@ -213,6 +227,72 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+    {% if user.is_authenticated %}
+    <!-- Chat Notifications -->
+    <script>
+        // Check for unread messages every 30 seconds
+        function checkUnreadMessages() {
+            fetch('{% url "chat:unread_count" %}')
+                .then(response => response.json())
+                .then(data => {
+                    const navBadge = document.getElementById('chatUnreadBadge');
+                    const sidebarBadge = document.getElementById('sidebarChatUnreadBadge');
+
+                    if (data.total_unread > 0) {
+                        // Update badges
+                        navBadge.textContent = data.total_unread;
+                        navBadge.classList.remove('d-none');
+
+                        sidebarBadge.textContent = data.total_unread;
+                        sidebarBadge.classList.remove('d-none');
+
+                        // Show browser notification if supported and we're not on the chat page
+                        if (Notification.permission === 'granted' && !window.location.href.includes('/chat/')) {
+                            // Check if there are new messages since last check
+                            if (parseInt(navBadge.getAttribute('data-last-count') || 0) < data.total_unread) {
+                                // Get the most recent unread conversation
+                                const conversationId = Object.keys(data.unread_by_conversation)[0];
+                                const conversation = data.unread_by_conversation[conversationId];
+
+                                const notification = new Notification('New message', {
+                                    body: `You have ${data.total_unread} unread message(s) in ${conversation.title}`,
+                                    icon: '/static/img/logo.png'
+                                });
+
+                                notification.onclick = function() {
+                                    window.open(`{% url 'chat:home' %}`, '_blank');
+                                };
+                            }
+                        }
+
+                        // Store current count for comparison next time
+                        navBadge.setAttribute('data-last-count', data.total_unread);
+                    } else {
+                        // Hide badges if no unread messages
+                        navBadge.classList.add('d-none');
+                        sidebarBadge.classList.add('d-none');
+                        navBadge.setAttribute('data-last-count', '0');
+                    }
+                })
+                .catch(error => console.error('Error checking unread messages:', error));
+        }
+
+        // Request notification permission
+        document.addEventListener('DOMContentLoaded', function() {
+            if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+                Notification.requestPermission();
+            }
+
+            // Initial check
+            checkUnreadMessages();
+
+            // Set interval for periodic checks
+            setInterval(checkUnreadMessages, 30000); // Check every 30 seconds
+        });
+    </script>
+    {% endif %}
+
     <!-- Custom JS -->
     {% block extra_js %}{% endblock %}
 </body>

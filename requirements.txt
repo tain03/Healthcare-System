@@ -3,3 +3,12 @@ Pillow==10.2.0
 django-crispy-forms==2.1
 crispy-bootstrap5==2023.10
 python-dateutil==2.8.2
+requests==2.31.0
+python-dotenv==1.0.0
+
+# For LLM integration
+transformers==4.35.0
+torch==2.0.1
+accelerate==0.25.0
+bitsandbytes==0.41.0
+sentencepiece==0.1.99

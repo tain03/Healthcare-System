@@ -1,0 +1,158 @@
+{% extends 'chat/base_chat.html' %}
+
+{% block chat_title %}Chat Home{% endblock %}
+
+{% block chat_content %}
+<div class="col-md-4 chat-sidebar">
+    <div class="p-3 border-bottom">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">Conversations</h5>
+            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#newConversationModal">
+                <i class="fas fa-plus"></i> New
+            </button>
+        </div>
+        <form method="get" action="{% url 'chat:home' %}" class="mt-2">
+            <div class="input-group input-group-sm">
+                <input type="text" class="form-control" placeholder="Search conversations..." name="q" value="{{ search_query }}">
+                <button class="btn btn-outline-secondary" type="submit">
+                    <i class="fas fa-search"></i>
+                </button>
+                {% if search_query %}
+                <a href="{% url 'chat:home' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times"></i>
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <ul class="chat-list">
+        <!-- AI Assistant conversation always appears first -->
+        <li class="chat-list-item {% if ai_conversation.id == active_conversation.id %}active{% endif %}">
+            <a href="{% url 'chat:conversation' ai_conversation.id %}" class="text-decoration-none text-dark d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="fas fa-robot me-2"></i>
+                    <strong>AI Health Assistant</strong>
+                    <p class="text-muted mb-0 small">Ask health-related questions</p>
+                </div>
+                {% if ai_conversation.get_unread_count > 0 %}
+                <span class="unread-badge">{{ ai_conversation.get_unread_count }}</span>
+                {% endif %}
+            </a>
+        </li>
+
+        <!-- Other conversations -->
+        {% for conversation in conversations %}
+            {% if conversation.id != ai_conversation.id %}
+            <li class="chat-list-item {% if conversation.id == active_conversation.id %}active{% endif %}">
+                <a href="{% url 'chat:conversation' conversation.id %}" class="text-decoration-none text-dark d-flex justify-content-between align-items-center">
+                    <div>
+                        {% if conversation.conversation_type == 'patient_doctor' %}
+                            <i class="fas fa-user-md me-2"></i>
+                        {% elif conversation.conversation_type == 'patient_support' or conversation.conversation_type == 'doctor_support' %}
+                            <i class="fas fa-headset me-2"></i>
+                        {% else %}
+                            <i class="fas fa-comments me-2"></i>
+                        {% endif %}
+
+                        <strong>
+                            {% if conversation.initiator == request.user %}
+                                {{ conversation.receiver.get_full_name }}
+                            {% else %}
+                                {{ conversation.initiator.get_full_name }}
+                            {% endif %}
+                        </strong>
+
+                        <p class="text-muted mb-0 small">
+                            {% with last_message=conversation.get_last_message %}
+                                {% if last_message %}
+                                    {{ last_message.content|truncatechars:30 }}
+                                {% else %}
+                                    No messages yet
+                                {% endif %}
+                            {% endwith %}
+                        </p>
+                    </div>
+
+                    {% with unread_count=conversation.get_unread_count %}
+                        {% if unread_count > 0 %}
+                        <span class="unread-badge">{{ unread_count }}</span>
+                        {% endif %}
+                    {% endwith %}
+                </a>
+            </li>
+            {% endif %}
+        {% endfor %}
+
+        {% if conversations.count == 1 and conversations.first.id == ai_conversation.id %}
+            <li class="chat-list-item text-center p-3">
+                <p class="text-muted">No conversations yet</p>
+                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#newConversationModal">
+                    Start a conversation
+                </button>
+            </li>
+        {% endif %}
+    </ul>
+</div>
+
+<div class="col-md-8 chat-main">
+    <div class="d-flex flex-column justify-content-center align-items-center h-100 text-center">
+        <i class="fas fa-comments fa-5x text-muted mb-4"></i>
+        <h3>Welcome to Healthcare Chat</h3>
+        <p class="text-muted">Select a conversation from the sidebar or start a new one</p>
+
+        <div class="mt-4">
+            <a href="{% url 'chat:conversation' ai_conversation.id %}" class="btn btn-primary me-2">
+                <i class="fas fa-robot me-2"></i> Chat with AI Assistant
+            </a>
+            <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#newConversationModal">
+                <i class="fas fa-user-md me-2"></i> Chat with a Doctor
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- New Conversation Modal -->
+<div class="modal fade" id="newConversationModal" tabindex="-1" aria-labelledby="newConversationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newConversationModalLabel">Start a New Conversation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="{% url 'chat:create_conversation' %}">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Conversation Title</label>
+                        <input type="text" class="form-control" id="title" name="title" required placeholder="e.g., Medical Advice, Appointment Question">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="receiver" class="form-label">Select Recipient</label>
+                        <select class="form-select" id="receiver" name="receiver" required>
+                            <option value="">-- Select a recipient --</option>
+
+                            {% if user.user_type == 'patient' %}
+                                <optgroup label="Doctors">
+                                    {% for doctor in available_doctors %}
+                                    <option value="{{ doctor.user.id }}">Dr. {{ doctor.user.get_full_name }} ({{ doctor.specialization }})</option>
+                                    {% endfor %}
+                                </optgroup>
+                                <option value="support">Healthcare Support</option>
+                            {% elif user.user_type == 'doctor' %}
+                                <option value="support">Healthcare Support</option>
+                            {% endif %}
+                        </select>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Start Conversation</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

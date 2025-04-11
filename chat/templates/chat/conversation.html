@@ -1,0 +1,641 @@
+{% extends 'chat/base_chat.html' %}
+
+{% block chat_title %}{{ conversation.title }}{% endblock %}
+
+{% block chat_content %}
+<div class="col-md-4 chat-sidebar">
+    <div class="p-3 border-bottom">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">Conversations</h5>
+            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#newConversationModal">
+                <i class="fas fa-plus"></i> New
+            </button>
+        </div>
+        <form method="get" action="{% url 'chat:home' %}" class="mt-2">
+            <div class="input-group input-group-sm">
+                <input type="text" class="form-control" placeholder="Search conversations..." name="q" value="{{ search_query }}">
+                <button class="btn btn-outline-secondary" type="submit">
+                    <i class="fas fa-search"></i>
+                </button>
+                {% if search_query %}
+                <a href="{% url 'chat:home' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times"></i>
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <ul class="chat-list">
+        <!-- AI Assistant conversation always appears first -->
+        <li class="chat-list-item {% if conversation.conversation_type == 'ai_assistant' %}active{% endif %}">
+            <a href="{% url 'chat:conversation' ai_conversation.id %}" class="text-decoration-none text-dark d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="fas fa-robot me-2"></i>
+                    <strong>AI Health Assistant</strong>
+                    <p class="text-muted mb-0 small">Ask health-related questions</p>
+                </div>
+                {% if ai_conversation.id != conversation.id and ai_conversation.get_unread_count > 0 %}
+                <span class="unread-badge">{{ ai_conversation.get_unread_count }}</span>
+                {% endif %}
+            </a>
+        </li>
+
+        <!-- Other conversations -->
+        {% for conv in conversations %}
+            {% if conv.id != ai_conversation.id %}
+            <li class="chat-list-item {% if conv.id == conversation.id %}active{% endif %}">
+                <a href="{% url 'chat:conversation' conv.id %}" class="text-decoration-none text-dark d-flex justify-content-between align-items-center">
+                    <div>
+                        {% if conv.conversation_type == 'patient_doctor' %}
+                            <i class="fas fa-user-md me-2"></i>
+                        {% elif conv.conversation_type == 'patient_support' or conv.conversation_type == 'doctor_support' %}
+                            <i class="fas fa-headset me-2"></i>
+                        {% else %}
+                            <i class="fas fa-comments me-2"></i>
+                        {% endif %}
+
+                        <strong>
+                            {% if conv.initiator == request.user %}
+                                {{ conv.receiver.get_full_name }}
+                            {% else %}
+                                {{ conv.initiator.get_full_name }}
+                            {% endif %}
+                        </strong>
+
+                        <p class="text-muted mb-0 small">
+                            {% with last_message=conv.get_last_message %}
+                                {% if last_message %}
+                                    {{ last_message.content|truncatechars:30 }}
+                                {% else %}
+                                    No messages yet
+                                {% endif %}
+                            {% endwith %}
+                        </p>
+                    </div>
+
+                    {% if conv.id != conversation.id %}
+                        {% with unread_count=conv.get_unread_count %}
+                            {% if unread_count > 0 %}
+                            <span class="unread-badge">{{ unread_count }}</span>
+                            {% endif %}
+                        {% endwith %}
+                    {% endif %}
+                </a>
+            </li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+</div>
+
+<div class="col-md-8 chat-main">
+    <div class="chat-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="mb-0">
+                    {% if conversation.conversation_type == 'ai_assistant' %}
+                        <i class="fas fa-robot me-2"></i> AI Health Assistant
+                    {% elif conversation.conversation_type == 'patient_doctor' %}
+                        <i class="fas fa-user-md me-2"></i>
+                        {% if conversation.initiator == request.user %}
+                            {{ conversation.receiver.get_full_name }}
+                        {% else %}
+                            {{ conversation.initiator.get_full_name }}
+                        {% endif %}
+                    {% else %}
+                        <i class="fas fa-headset me-2"></i> Healthcare Support
+                    {% endif %}
+                </h5>
+                <p class="text-muted mb-0 small">
+                    {% if conversation.conversation_type == 'ai_assistant' %}
+                        Ask health-related questions
+                    {% elif conversation.conversation_type == 'patient_doctor' %}
+                        {% if conversation.initiator == request.user %}
+                            {% with doctor=conversation.receiver.doctor_profile %}
+                                {{ doctor.specialization }}
+                            {% endwith %}
+                        {% else %}
+                            {% with doctor=conversation.initiator.doctor_profile %}
+                                {{ doctor.specialization }}
+                            {% endwith %}
+                        {% endif %}
+                    {% else %}
+                        {{ conversation.get_conversation_type_display }}
+                    {% endif %}
+                </p>
+            </div>
+
+            <div>
+                <button class="btn btn-sm btn-outline-secondary me-2" id="refreshBtn">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" id="searchToggleBtn">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Message search form (hidden by default) -->
+        <div class="mt-3 d-none" id="messageSearchForm">
+            <form method="get" action="{% url 'chat:conversation' conversation.id %}">
+                <div class="input-group input-group-sm">
+                    <input type="text" class="form-control" placeholder="Search in messages..." name="q" value="{{ search_query }}">
+                    <button class="btn btn-outline-secondary" type="submit">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    {% if search_query %}
+                    <a href="{% url 'chat:conversation' conversation.id %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="chat-messages" id="chatMessages">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="message {% if message.sender == request.user %}message-self{% elif message.message_type == 'ai_response' %}message-ai{% else %}message-other{% endif %}">
+                    <div class="message-content">{{ message.content }}</div>
+                    <div class="message-info d-flex justify-content-between">
+                        <span>
+                            {% if message.sender %}
+                                {{ message.sender.get_full_name }}
+                            {% else %}
+                                AI Assistant
+                            {% endif %}
+                        </span>
+                        <span>{{ message.timestamp|date:"M d, Y H:i" }}</span>
+                    </div>
+
+                    {% if message.message_type == 'ai_response' %}
+                    <div class="rating-container mt-2 text-end">
+                        <div class="rating-stars" data-message-id="{{ message.id }}">
+                            <i class="far fa-star" data-rating="1"></i>
+                            <i class="far fa-star" data-rating="2"></i>
+                            <i class="far fa-star" data-rating="3"></i>
+                            <i class="far fa-star" data-rating="4"></i>
+                            <i class="far fa-star" data-rating="5"></i>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="text-center p-4">
+                <p class="text-muted">No messages yet. Start the conversation!</p>
+            </div>
+        {% endif %}
+
+        <div class="typing-indicator" id="typingIndicator">
+            <i class="fas fa-circle-notch fa-spin me-2"></i> AI is thinking...
+        </div>
+    </div>
+
+    <div class="chat-input">
+        <form id="messageForm" method="post" action="{% url 'chat:send_message' conversation.id %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="input-group mb-2">
+                <input type="text" class="form-control" id="messageContent" name="content" placeholder="Type your message...">
+                <button type="button" class="btn btn-outline-secondary" id="attachmentBtn">
+                    <i class="fas fa-paperclip"></i>
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-paper-plane"></i> Send
+                </button>
+            </div>
+            <div class="attachment-preview d-none mb-2" id="attachmentPreview">
+                <div class="card">
+                    <div class="card-body p-2 d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-file me-2"></i>
+                            <span id="attachmentName">No file selected</span>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-danger" id="removeAttachment">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <input type="file" id="attachmentInput" name="attachment" class="d-none">
+        </form>
+    </div>
+</div>
+
+<!-- New Conversation Modal -->
+<div class="modal fade" id="newConversationModal" tabindex="-1" aria-labelledby="newConversationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newConversationModalLabel">Start a New Conversation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="{% url 'chat:create_conversation' %}">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Conversation Title</label>
+                        <input type="text" class="form-control" id="title" name="title" required placeholder="e.g., Medical Advice, Appointment Question">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="receiver" class="form-label">Select Recipient</label>
+                        <select class="form-select" id="receiver" name="receiver" required>
+                            <option value="">-- Select a recipient --</option>
+
+                            {% if user.user_type == 'patient' %}
+                                <optgroup label="Doctors">
+                                    {% for doctor in available_doctors %}
+                                    <option value="{{ doctor.user.id }}">Dr. {{ doctor.user.get_full_name }} ({{ doctor.specialization }})</option>
+                                    {% endfor %}
+                                </optgroup>
+                                <option value="support">Healthcare Support</option>
+                            {% elif user.user_type == 'doctor' %}
+                                <option value="support">Healthcare Support</option>
+                            {% endif %}
+                        </select>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Start Conversation</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block chat_scripts %}
+// Variables
+const chatMessages = document.getElementById('chatMessages');
+const messageForm = document.getElementById('messageForm');
+const messageContent = document.getElementById('messageContent');
+const refreshBtn = document.getElementById('refreshBtn');
+const searchToggleBtn = document.getElementById('searchToggleBtn');
+const messageSearchForm = document.getElementById('messageSearchForm');
+const typingIndicator = document.getElementById('typingIndicator');
+const attachmentBtn = document.getElementById('attachmentBtn');
+const attachmentInput = document.getElementById('attachmentInput');
+const attachmentPreview = document.getElementById('attachmentPreview');
+const attachmentName = document.getElementById('attachmentName');
+const removeAttachment = document.getElementById('removeAttachment');
+const isAiConversation = {% if is_ai_conversation %}true{% else %}false{% endif %};
+let lastTimestamp = new Date().toISOString();
+
+// Show search form if there's a search query
+if ('{{ search_query }}') {
+    messageSearchForm.classList.remove('d-none');
+}
+
+// Scroll to bottom on load
+document.addEventListener('DOMContentLoaded', function() {
+    scrollToBottom(chatMessages);
+    setupRatingStars();
+    setupAttachmentHandlers();
+
+    // Start polling for new messages
+    setInterval(fetchNewMessages, 5000);
+});
+
+// Setup attachment handlers
+function setupAttachmentHandlers() {
+    // Attachment button click
+    attachmentBtn.addEventListener('click', function() {
+        attachmentInput.click();
+    });
+
+    // File selected
+    attachmentInput.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            const file = this.files[0];
+            attachmentName.textContent = file.name;
+            attachmentPreview.classList.remove('d-none');
+
+            // Update button icon based on file type
+            const fileIcon = attachmentPreview.querySelector('.fas');
+            if (file.type.startsWith('image/')) {
+                fileIcon.className = 'fas fa-image me-2';
+            } else if (file.type.startsWith('video/')) {
+                fileIcon.className = 'fas fa-video me-2';
+            } else if (file.type.startsWith('audio/')) {
+                fileIcon.className = 'fas fa-music me-2';
+            } else if (file.type.includes('pdf')) {
+                fileIcon.className = 'fas fa-file-pdf me-2';
+            } else if (file.type.includes('word') || file.type.includes('document')) {
+                fileIcon.className = 'fas fa-file-word me-2';
+            } else if (file.type.includes('excel') || file.type.includes('sheet')) {
+                fileIcon.className = 'fas fa-file-excel me-2';
+            } else {
+                fileIcon.className = 'fas fa-file me-2';
+            }
+        }
+    });
+
+    // Remove attachment
+    removeAttachment.addEventListener('click', function() {
+        attachmentInput.value = '';
+        attachmentPreview.classList.add('d-none');
+    });
+}
+
+// Handle message submission
+messageForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    // Check if there's content or an attachment
+    if (!messageContent.value.trim() && (!attachmentInput.files || !attachmentInput.files[0])) {
+        return;
+    }
+
+    // Prepare message content
+    const content = messageContent.value;
+    const hasAttachment = attachmentInput.files && attachmentInput.files[0];
+
+    // Show user message immediately
+    const userMessageDiv = document.createElement('div');
+    userMessageDiv.className = 'message message-self';
+
+    let messageHTML = `<div class="message-content">${content}</div>`;
+
+    // If there's an attachment and it's an image, show preview
+    if (hasAttachment && attachmentInput.files[0].type.startsWith('image/')) {
+        const file = attachmentInput.files[0];
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            const imgPreview = document.createElement('div');
+            imgPreview.className = 'mt-2';
+            imgPreview.innerHTML = `<img src="${e.target.result}" class="img-fluid rounded" style="max-height: 200px;">`;
+            userMessageDiv.appendChild(imgPreview);
+            scrollToBottom(chatMessages);
+        };
+
+        reader.readAsDataURL(file);
+    } else if (hasAttachment) {
+        // For non-image files, show file info
+        messageHTML += `
+            <div class="mt-2 small">
+                <i class="fas fa-paperclip me-1"></i> ${attachmentInput.files[0].name}
+            </div>
+        `;
+    }
+
+    messageHTML += `
+        <div class="message-info d-flex justify-content-between">
+            <span>{{ request.user.get_full_name }}</span>
+            <span>${new Date().toLocaleString()}</span>
+        </div>
+    `;
+
+    userMessageDiv.innerHTML = messageHTML;
+    chatMessages.appendChild(userMessageDiv);
+    scrollToBottom(chatMessages);
+
+    // Show typing indicator for AI conversations
+    if (isAiConversation) {
+        typingIndicator.style.display = 'block';
+        scrollToBottom(chatMessages);
+    }
+
+    // Send message to server
+    const formData = new FormData(messageForm);
+
+    fetch(messageForm.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            // Clear input and attachment
+            messageContent.value = '';
+            attachmentInput.value = '';
+            attachmentPreview.classList.add('d-none');
+
+            // If AI response, show it
+            if (data.ai_response) {
+                // Hide typing indicator
+                typingIndicator.style.display = 'none';
+
+                // Show AI response
+                const aiMessageDiv = document.createElement('div');
+                aiMessageDiv.className = 'message message-ai';
+                aiMessageDiv.innerHTML = `
+                    <div class="message-content">${data.ai_response.content}</div>
+                    <div class="message-info d-flex justify-content-between">
+                        <span>
+                            AI Assistant
+                            ${data.ai_response.response_type === 'llm' ?
+                                '<span class="badge bg-info text-white small">LLM</span>' :
+                                '<span class="badge bg-secondary text-white small">Rule</span>'}
+                        </span>
+                        <span>${formatTimestamp(data.ai_response.timestamp)}</span>
+                    </div>
+                    <div class="rating-container mt-2 text-end">
+                        <div class="rating-stars" data-message-id="${data.ai_response.id}">
+                            <i class="far fa-star" data-rating="1"></i>
+                            <i class="far fa-star" data-rating="2"></i>
+                            <i class="far fa-star" data-rating="3"></i>
+                            <i class="far fa-star" data-rating="4"></i>
+                            <i class="far fa-star" data-rating="5"></i>
+                        </div>
+                    </div>
+                `;
+                chatMessages.appendChild(aiMessageDiv);
+                scrollToBottom(chatMessages);
+                setupRatingStars();
+            }
+
+            // Update last timestamp
+            lastTimestamp = new Date().toISOString();
+        } else {
+            // Hide typing indicator
+            typingIndicator.style.display = 'none';
+
+            // Show error
+            alert('Error sending message: ' + data.message);
+        }
+    })
+    .catch(error => {
+        // Hide typing indicator
+        typingIndicator.style.display = 'none';
+
+        console.error('Error:', error);
+        alert('An error occurred while sending your message.');
+    });
+});
+
+// Fetch new messages
+function fetchNewMessages() {
+    fetch(`{% url 'chat:get_messages' conversation.id %}?last_timestamp=${encodeURIComponent(lastTimestamp)}`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.messages && data.messages.length > 0) {
+            data.messages.forEach(message => {
+                // Create message element
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${message.is_self ? 'message-self' : (message.message_type === 'ai_response' ? 'message-ai' : 'message-other')}`;
+
+                let messageHtml = `<div class="message-content">${message.content}</div>`;
+
+                // Handle attachments
+                if (message.attachment_url) {
+                    if (message.message_type === 'image') {
+                        // Display image
+                        messageHtml += `
+                            <div class="mt-2">
+                                <a href="${message.attachment_url}" target="_blank">
+                                    <img src="${message.attachment_url}" class="img-fluid rounded" style="max-height: 200px;">
+                                </a>
+                            </div>
+                        `;
+                    } else {
+                        // Display file link
+                        messageHtml += `
+                            <div class="mt-2 small">
+                                <a href="${message.attachment_url}" target="_blank" class="text-decoration-none">
+                                    <i class="fas fa-file me-1"></i> ${message.attachment_name || 'Download attachment'}
+                                </a>
+                            </div>
+                        `;
+                    }
+                }
+
+                messageHtml += `
+                    <div class="message-info d-flex justify-content-between">
+                        <span>${message.sender_name}</span>
+                        <span>${formatTimestamp(message.timestamp)}</span>
+                    </div>
+                `;
+
+                // Add rating stars for AI responses
+                if (message.message_type === 'ai_response') {
+                    messageHtml += `
+                        <div class="rating-container mt-2 text-end">
+                            <div class="rating-stars" data-message-id="${message.id}">
+                                <i class="far fa-star" data-rating="1"></i>
+                                <i class="far fa-star" data-rating="2"></i>
+                                <i class="far fa-star" data-rating="3"></i>
+                                <i class="far fa-star" data-rating="4"></i>
+                                <i class="far fa-star" data-rating="5"></i>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                messageDiv.innerHTML = messageHtml;
+                chatMessages.appendChild(messageDiv);
+            });
+
+            // Update last timestamp
+            if (data.messages.length > 0) {
+                lastTimestamp = data.messages[data.messages.length - 1].timestamp;
+            }
+
+            // Scroll to bottom
+            scrollToBottom(chatMessages);
+
+            // Setup rating stars for new messages
+            setupRatingStars();
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching messages:', error);
+    });
+}
+
+// Refresh button
+refreshBtn.addEventListener('click', function() {
+    fetchNewMessages();
+});
+
+// Search toggle button
+searchToggleBtn.addEventListener('click', function() {
+    messageSearchForm.classList.toggle('d-none');
+    if (!messageSearchForm.classList.contains('d-none')) {
+        messageSearchForm.querySelector('input').focus();
+    }
+});
+
+// Setup rating stars
+function setupRatingStars() {
+    document.querySelectorAll('.rating-stars').forEach(container => {
+        const stars = container.querySelectorAll('i');
+        const messageId = container.dataset.messageId;
+
+        stars.forEach(star => {
+            star.addEventListener('mouseover', function() {
+                const rating = parseInt(this.dataset.rating);
+
+                // Highlight stars up to the hovered one
+                stars.forEach((s, index) => {
+                    if (index < rating) {
+                        s.classList.remove('far');
+                        s.classList.add('fas');
+                    } else {
+                        s.classList.remove('fas');
+                        s.classList.add('far');
+                    }
+                });
+            });
+
+            star.addEventListener('mouseout', function() {
+                // Reset stars if not rated
+                if (!container.dataset.rated) {
+                    stars.forEach(s => {
+                        s.classList.remove('fas');
+                        s.classList.add('far');
+                    });
+                }
+            });
+
+            star.addEventListener('click', function() {
+                const rating = parseInt(this.dataset.rating);
+
+                // Send rating to server
+                fetch(`{% url 'chat:rate_ai_response' 0 %}`.replace('0', messageId), {
+                    method: 'POST',
+                    body: new URLSearchParams({
+                        'rating': rating,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    }),
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Mark as rated
+                        container.dataset.rated = 'true';
+
+                        // Set stars
+                        stars.forEach((s, index) => {
+                            if (index < rating) {
+                                s.classList.remove('far');
+                                s.classList.add('fas');
+                            } else {
+                                s.classList.remove('fas');
+                                s.classList.add('far');
+                            }
+                        });
+                    } else {
+                        alert('Error rating response: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while rating the response.');
+                });
+            });
+        });
+    });
+}
+{% endblock %}
