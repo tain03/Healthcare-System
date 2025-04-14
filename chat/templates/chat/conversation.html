@@ -91,45 +91,61 @@
 <div class="col-md-8 chat-main">
     <div class="chat-header">
         <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <h5 class="mb-0">
+            <div class="d-flex align-items-center">
+                <div class="me-3">
                     {% if conversation.conversation_type == 'ai_assistant' %}
-                        <i class="fas fa-robot me-2"></i> AI Health Assistant
+                        <div class="rounded-circle bg-primary p-2 text-white" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-robot"></i>
+                        </div>
                     {% elif conversation.conversation_type == 'patient_doctor' %}
-                        <i class="fas fa-user-md me-2"></i>
-                        {% if conversation.initiator == request.user %}
-                            {{ conversation.receiver.get_full_name }}
-                        {% else %}
-                            {{ conversation.initiator.get_full_name }}
-                        {% endif %}
+                        <div class="rounded-circle bg-success p-2 text-white" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-user-md"></i>
+                        </div>
                     {% else %}
-                        <i class="fas fa-headset me-2"></i> Healthcare Support
+                        <div class="rounded-circle bg-info p-2 text-white" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-headset"></i>
+                        </div>
                     {% endif %}
-                </h5>
-                <p class="text-muted mb-0 small">
-                    {% if conversation.conversation_type == 'ai_assistant' %}
-                        Ask health-related questions
-                    {% elif conversation.conversation_type == 'patient_doctor' %}
-                        {% if conversation.initiator == request.user %}
-                            {% with doctor=conversation.receiver.doctor_profile %}
-                                {{ doctor.specialization }}
-                            {% endwith %}
+                </div>
+                <div>
+                    <h5 class="mb-0 fw-bold">
+                        {% if conversation.conversation_type == 'ai_assistant' %}
+                            AI Health Assistant
+                        {% elif conversation.conversation_type == 'patient_doctor' %}
+                            {% if conversation.initiator == request.user %}
+                                {{ conversation.receiver.get_full_name }}
+                            {% else %}
+                                {{ conversation.initiator.get_full_name }}
+                            {% endif %}
                         {% else %}
-                            {% with doctor=conversation.initiator.doctor_profile %}
-                                {{ doctor.specialization }}
-                            {% endwith %}
+                            Healthcare Support
                         {% endif %}
-                    {% else %}
-                        {{ conversation.get_conversation_type_display }}
-                    {% endif %}
-                </p>
+                    </h5>
+                    <p class="text-muted mb-0 small">
+                        {% if conversation.conversation_type == 'ai_assistant' %}
+                            <span class="badge bg-light text-primary">AI Assistant</span> Ask health-related questions
+                        {% elif conversation.conversation_type == 'patient_doctor' %}
+                            {% if conversation.initiator == request.user %}
+                                {% with doctor=conversation.receiver.doctor_profile %}
+                                    <span class="badge bg-light text-success">{{ doctor.specialization }}</span> Available
+                                {% endwith %}
+                            {% else %}
+                                {% with doctor=conversation.initiator.doctor_profile %}
+                                    <span class="badge bg-light text-success">{{ doctor.specialization }}</span> Available
+                                {% endwith %}
+                            {% endif %}
+                        {% else %}
+                            <span class="badge bg-light text-info">Support</span> {{ conversation.get_conversation_type_display }}
+                        {% endif %}
+                    </p>
+                </div>
             </div>
 
             <div>
-                <button class="btn btn-sm btn-outline-secondary me-2" id="refreshBtn">
-                    <i class="fas fa-sync-alt"></i> Refresh
+                <button class="btn btn-sm btn-light me-2 rounded-circle" id="refreshBtn" title="Refresh">
+                    <i class="fas fa-sync-alt"></i>
                 </button>
-                <button class="btn btn-sm btn-outline-secondary" id="searchToggleBtn">
+                <button class="btn btn-sm btn-light rounded-circle" id="searchToggleBtn" title="Search">
                     <i class="fas fa-search"></i>
                 </button>
             </div>
@@ -154,21 +170,11 @@
     </div>
 
     <div class="chat-messages" id="chatMessages">
-        {% if messages %}
-            {% for message in messages %}
+        {% if chat_messages %}
+            {% for message in chat_messages %}
                 <div class="message {% if message.sender == request.user %}message-self{% elif message.message_type == 'ai_response' %}message-ai{% else %}message-other{% endif %}">
                     <div class="message-content">{{ message.content }}</div>
-                    <div class="message-info d-flex justify-content-between">
-                        <span>
-                            {% if message.sender %}
-                                {{ message.sender.get_full_name }}
-                            {% else %}
-                                AI Assistant
-                            {% endif %}
-                        </span>
-                        <span>{{ message.timestamp|date:"M d, Y H:i" }}</span>
-                    </div>
-
+                    
                     {% if message.message_type == 'ai_response' %}
                     <div class="rating-container mt-2 text-end">
                         <div class="rating-stars" data-message-id="{{ message.id }}">
@@ -189,34 +195,42 @@
         {% endif %}
 
         <div class="typing-indicator" id="typingIndicator">
-            <i class="fas fa-circle-notch fa-spin me-2"></i> AI is thinking...
+            <div class="d-flex align-items-center">
+                <div class="spinner-grow spinner-grow-sm text-primary me-2" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <span>AI is thinking<span class="dot-animation">...</span></span>
+            </div>
         </div>
     </div>
 
     <div class="chat-input">
         <form id="messageForm" method="post" action="{% url 'chat:send_message' conversation.id %}" enctype="multipart/form-data">
             {% csrf_token %}
-            <div class="input-group mb-2">
-                <input type="text" class="form-control" id="messageContent" name="content" placeholder="Type your message...">
-                <button type="button" class="btn btn-outline-secondary" id="attachmentBtn">
-                    <i class="fas fa-paperclip"></i>
-                </button>
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-paper-plane"></i> Send
-                </button>
-            </div>
-            <div class="attachment-preview d-none mb-2" id="attachmentPreview">
-                <div class="card">
+            <div class="attachment-preview d-none mb-3" id="attachmentPreview">
+                <div class="card border-0 shadow-sm">
                     <div class="card-body p-2 d-flex justify-content-between align-items-center">
                         <div>
-                            <i class="fas fa-file me-2"></i>
-                            <span id="attachmentName">No file selected</span>
+                            <i class="fas fa-file me-2 text-primary"></i>
+                            <span id="attachmentName" class="text-truncate">No file selected</span>
                         </div>
-                        <button type="button" class="btn btn-sm btn-outline-danger" id="removeAttachment">
+                        <button type="button" class="btn btn-sm btn-light rounded-circle" id="removeAttachment">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
                 </div>
+            </div>
+            <div class="input-group">
+                <button type="button" class="btn btn-light rounded-circle me-2" id="attachmentBtn" title="Attach file">
+                    <i class="fas fa-paperclip"></i>
+                </button>
+                <input type="text" class="form-control shadow-sm" id="messageContent" name="content" placeholder="Type your message here...">
+                <button type="submit" class="btn btn-primary rounded-circle ms-2" title="Send message">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+            <div class="text-center mt-2">
+                <small class="text-muted">Your messages are secure and encrypted</small>
             </div>
             <input type="file" id="attachmentInput" name="attachment" class="d-none">
         </form>
@@ -383,12 +397,7 @@ messageForm.addEventListener('submit', function(e) {
         `;
     }
 
-    messageHTML += `
-        <div class="message-info d-flex justify-content-between">
-            <span>{{ request.user.get_full_name }}</span>
-            <span>${new Date().toLocaleString()}</span>
-        </div>
-    `;
+    // Removed message-info div to prevent displaying sender/timestamp
 
     userMessageDiv.innerHTML = messageHTML;
     chatMessages.appendChild(userMessageDiv);
@@ -428,15 +437,7 @@ messageForm.addEventListener('submit', function(e) {
                 aiMessageDiv.className = 'message message-ai';
                 aiMessageDiv.innerHTML = `
                     <div class="message-content">${data.ai_response.content}</div>
-                    <div class="message-info d-flex justify-content-between">
-                        <span>
-                            AI Assistant
-                            ${data.ai_response.response_type === 'llm' ?
-                                '<span class="badge bg-info text-white small">LLM</span>' :
-                                '<span class="badge bg-secondary text-white small">Rule</span>'}
-                        </span>
-                        <span>${formatTimestamp(data.ai_response.timestamp)}</span>
-                    </div>
+                    
                     <div class="rating-container mt-2 text-end">
                         <div class="rating-stars" data-message-id="${data.ai_response.id}">
                             <i class="far fa-star" data-rating="1"></i>
@@ -476,8 +477,8 @@ function fetchNewMessages() {
     fetch(`{% url 'chat:get_messages' conversation.id %}?last_timestamp=${encodeURIComponent(lastTimestamp)}`)
     .then(response => response.json())
     .then(data => {
-        if (data.messages && data.messages.length > 0) {
-            data.messages.forEach(message => {
+        if (data.chat_messages && data.chat_messages.length > 0) {
+            data.chat_messages.forEach(message => {
                 // Create message element
                 const messageDiv = document.createElement('div');
                 messageDiv.className = `message ${message.is_self ? 'message-self' : (message.message_type === 'ai_response' ? 'message-ai' : 'message-other')}`;
@@ -507,12 +508,7 @@ function fetchNewMessages() {
                     }
                 }
 
-                messageHtml += `
-                    <div class="message-info d-flex justify-content-between">
-                        <span>${message.sender_name}</span>
-                        <span>${formatTimestamp(message.timestamp)}</span>
-                    </div>
-                `;
+                // Removed message-info div to prevent displaying sender/timestamp
 
                 // Add rating stars for AI responses
                 if (message.message_type === 'ai_response') {
@@ -534,8 +530,8 @@ function fetchNewMessages() {
             });
 
             // Update last timestamp
-            if (data.messages.length > 0) {
-                lastTimestamp = data.messages[data.messages.length - 1].timestamp;
+            if (data.chat_messages.length > 0) {
+                lastTimestamp = data.chat_messages[data.chat_messages.length - 1].timestamp;
             }
 
             // Scroll to bottom
@@ -638,4 +634,20 @@ function setupRatingStars() {
         });
     });
 }
+
+// Add dot animation for typing indicator
+const style = document.createElement('style');
+style.textContent = `
+    .dot-animation {
+        display: inline-block;
+        animation: dotAnimation 1.5s infinite;
+    }
+    
+    @keyframes dotAnimation {
+        0% { opacity: 0.3; }
+        50% { opacity: 1; }
+        100% { opacity: 0.3; }
+    }
+`;
+document.head.appendChild(style);
 {% endblock %}

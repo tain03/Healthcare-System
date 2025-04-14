@@ -126,7 +126,7 @@ def conversation_detail(request, conversation_id):
         'conversation': conversation,
         'conversations': conversations,
         'ai_conversation': ai_conversation,
-        'messages': messages_list,
+        'chat_messages': messages_list,
         'is_ai_conversation': is_ai_conversation,
         'available_doctors': available_doctors,
         'search_query': search_query
@@ -339,7 +339,7 @@ def get_messages(request, conversation_id):
 
         messages_data.append(message_data)
 
-    return JsonResponse({'messages': messages_data})
+    return JsonResponse({'chat_messages': messages_data})
 
 @login_required
 def rate_ai_response(request, message_id):
