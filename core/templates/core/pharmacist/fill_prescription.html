@@ -1,0 +1,93 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Fill Prescription - Healthcare System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>Fill Prescription</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'core:pharmacist_prescriptions' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Prescriptions
+            </a>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Prescription Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <p><strong>Patient:</strong> {{ prescription.patient }}</p>
+                            <p><strong>Medication:</strong> {{ prescription.medication }}</p>
+                            <p><strong>Dosage:</strong> {{ prescription.dosage }}</p>
+                            <p><strong>Frequency:</strong> {{ prescription.frequency }}</p>
+                            <p><strong>Duration:</strong> {{ prescription.duration }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Prescribed By:</strong> {{ prescription.doctor }}</p>
+                            <p><strong>Date Prescribed:</strong> {{ prescription.date_prescribed }}</p>
+                            <p><strong>Expiry Date:</strong> {{ prescription.expiry_date }}</p>
+                            <p><strong>Status:</strong> <span class="badge bg-primary">{{ prescription.get_status_display }}</span></p>
+                        </div>
+                    </div>
+                    
+                    {% if prescription.notes %}
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6 class="mb-0">Doctor's Notes</h6>
+                        </div>
+                        <div class="card-body">
+                            {{ prescription.notes }}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <form method="post" action="{% url 'core:fill_prescription' prescription.id %}">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="pharmacist_notes" class="form-label">Pharmacist Notes</label>
+                            <textarea class="form-control" id="pharmacist_notes" name="pharmacist_notes" rows="3" placeholder="Add any notes or instructions for the patient"></textarea>
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="confirm_fill" name="confirm_fill" required>
+                            <label class="form-check-label" for="confirm_fill">I confirm that I have verified this prescription and prepared the medication according to the doctor's instructions.</label>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Fill Prescription</button>
+                            <a href="{% url 'core:pharmacist_prescriptions' %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Form validation
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(e) {
+            const confirmCheckbox = document.getElementById('confirm_fill');
+            
+            if (!confirmCheckbox.checked) {
+                e.preventDefault();
+                alert('You must confirm that you have verified the prescription before filling it.');
+                return;
+            }
+        });
+    });
+</script>
+{% endblock %}

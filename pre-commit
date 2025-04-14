@@ -1,0 +1,17 @@
+#!/bin/sh
+#
+# Pre-commit hook to clean __pycache__ directories before committing
+# This helps prevent accidentally committing compiled Python files that might contain API keys
+
+# Run the clean_pycache.py script
+python clean_pycache.py
+
+# Check if there are any remaining __pycache__ directories
+if [ $(find . -type d -name "__pycache__" | wc -l) -gt 0 ]; then
+    echo "WARNING: Some __pycache__ directories could not be removed."
+    echo "Please check and remove them manually before committing."
+    exit 1
+fi
+
+# Continue with the commit
+exit 0

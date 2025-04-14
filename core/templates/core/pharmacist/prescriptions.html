@@ -1,0 +1,264 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Prescriptions - Healthcare System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Prescriptions</h1>
+    
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Prescriptions Management</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="nav nav-tabs" id="prescriptionsTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="active-tab" data-bs-toggle="tab" data-bs-target="#active" type="button" role="tab" aria-controls="active" aria-selected="true">Active Prescriptions</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="filled-tab" data-bs-toggle="tab" data-bs-target="#filled" type="button" role="tab" aria-controls="filled" aria-selected="false">Filled Prescriptions</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="expired-tab" data-bs-toggle="tab" data-bs-target="#expired" type="button" role="tab" aria-controls="expired" aria-selected="false">Expired/Cancelled</button>
+                        </li>
+                    </ul>
+                    
+                    <div class="tab-content mt-3" id="prescriptionsTabsContent">
+                        <!-- Active Prescriptions -->
+                        <div class="tab-pane fade show active" id="active" role="tabpanel" aria-labelledby="active-tab">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Patient</th>
+                                            <th>Medication</th>
+                                            <th>Dosage</th>
+                                            <th>Prescribed By</th>
+                                            <th>Date Prescribed</th>
+                                            <th>Expiry Date</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for prescription in prescriptions %}
+                                        {% if prescription.status == 'active' %}
+                                        <tr>
+                                            <td>{{ prescription.patient }}</td>
+                                            <td>{{ prescription.medication }}</td>
+                                            <td>{{ prescription.dosage }}</td>
+                                            <td>{{ prescription.doctor }}</td>
+                                            <td>{{ prescription.date_prescribed }}</td>
+                                            <td>{{ prescription.expiry_date }}</td>
+                                            <td>
+                                                <a href="{% url 'core:fill_prescription' prescription.id %}" class="btn btn-sm btn-primary">Fill Prescription</a>
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            {% if not prescriptions or prescriptions|length == 0 %}
+                            <div class="alert alert-info">
+                                No active prescriptions at this time.
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Filled Prescriptions -->
+                        <div class="tab-pane fade" id="filled" role="tabpanel" aria-labelledby="filled-tab">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Patient</th>
+                                            <th>Medication</th>
+                                            <th>Dosage</th>
+                                            <th>Prescribed By</th>
+                                            <th>Date Prescribed</th>
+                                            <th>Date Filled</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for prescription in prescriptions %}
+                                        {% if prescription.status == 'filled' %}
+                                        <tr>
+                                            <td>{{ prescription.patient }}</td>
+                                            <td>{{ prescription.medication }}</td>
+                                            <td>{{ prescription.dosage }}</td>
+                                            <td>{{ prescription.doctor }}</td>
+                                            <td>{{ prescription.date_prescribed }}</td>
+                                            <td>{{ prescription.filled_date }}</td>
+                                            <td>
+                                                <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#prescriptionModal{{ prescription.id }}">
+                                                    View Details
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            {% if not prescriptions or prescriptions|length == 0 %}
+                            <div class="alert alert-info">
+                                No filled prescriptions at this time.
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Expired/Cancelled Prescriptions -->
+                        <div class="tab-pane fade" id="expired" role="tabpanel" aria-labelledby="expired-tab">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Patient</th>
+                                            <th>Medication</th>
+                                            <th>Dosage</th>
+                                            <th>Prescribed By</th>
+                                            <th>Date Prescribed</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for prescription in prescriptions %}
+                                        {% if prescription.status == 'expired' or prescription.status == 'cancelled' %}
+                                        <tr>
+                                            <td>{{ prescription.patient }}</td>
+                                            <td>{{ prescription.medication }}</td>
+                                            <td>{{ prescription.dosage }}</td>
+                                            <td>{{ prescription.doctor }}</td>
+                                            <td>{{ prescription.date_prescribed }}</td>
+                                            <td>
+                                                {% if prescription.status == 'expired' %}
+                                                <span class="badge bg-warning">{{ prescription.get_status_display }}</span>
+                                                {% elif prescription.status == 'cancelled' %}
+                                                <span class="badge bg-danger">{{ prescription.get_status_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#prescriptionModal{{ prescription.id }}">
+                                                    View Details
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            {% if not prescriptions or prescriptions|length == 0 %}
+                            <div class="alert alert-info">
+                                No expired or cancelled prescriptions at this time.
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Prescription Details Modals -->
+{% for prescription in prescriptions %}
+<div class="modal fade" id="prescriptionModal{{ prescription.id }}" tabindex="-1" aria-labelledby="prescriptionModalLabel{{ prescription.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="prescriptionModalLabel{{ prescription.id }}">Prescription Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Patient:</strong> {{ prescription.patient }}</p>
+                        <p><strong>Medication:</strong> {{ prescription.medication }}</p>
+                        <p><strong>Dosage:</strong> {{ prescription.dosage }}</p>
+                        <p><strong>Frequency:</strong> {{ prescription.frequency }}</p>
+                        <p><strong>Duration:</strong> {{ prescription.duration }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Prescribed By:</strong> {{ prescription.doctor }}</p>
+                        <p><strong>Date Prescribed:</strong> {{ prescription.date_prescribed }}</p>
+                        <p><strong>Expiry Date:</strong> {{ prescription.expiry_date }}</p>
+                        <p><strong>Status:</strong> 
+                            {% if prescription.status == 'active' %}
+                            <span class="badge bg-primary">{{ prescription.get_status_display }}</span>
+                            {% elif prescription.status == 'filled' %}
+                            <span class="badge bg-success">{{ prescription.get_status_display }}</span>
+                            {% elif prescription.status == 'expired' %}
+                            <span class="badge bg-warning">{{ prescription.get_status_display }}</span>
+                            {% elif prescription.status == 'cancelled' %}
+                            <span class="badge bg-danger">{{ prescription.get_status_display }}</span>
+                            {% endif %}
+                        </p>
+                        {% if prescription.filled_date %}
+                        <p><strong>Date Filled:</strong> {{ prescription.filled_date }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <h6>Notes:</h6>
+                    <div class="card">
+                        <div class="card-body">
+                            {{ prescription.notes|default:"No notes available." }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                {% if prescription.status == 'active' %}
+                <a href="{% url 'core:fill_prescription' prescription.id %}" class="btn btn-primary">Fill Prescription</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add search functionality to the tables
+        const addTableSearch = function(tableId, inputId) {
+            const searchInput = document.createElement('input');
+            searchInput.type = 'text';
+            searchInput.id = inputId;
+            searchInput.classList.add('form-control', 'mb-3');
+            searchInput.placeholder = 'Search prescriptions...';
+            
+            const table = document.querySelector(tableId);
+            if (table) {
+                table.parentNode.insertBefore(searchInput, table);
+                
+                searchInput.addEventListener('keyup', function() {
+                    const searchText = this.value.toLowerCase();
+                    const rows = table.querySelectorAll('tbody tr');
+                    
+                    rows.forEach(row => {
+                        const text = row.textContent.toLowerCase();
+                        row.style.display = text.includes(searchText) ? '' : 'none';
+                    });
+                });
+            }
+        };
+        
+        // Add search to all tables
+        addTableSearch('#active table', 'activeSearch');
+        addTableSearch('#filled table', 'filledSearch');
+        addTableSearch('#expired table', 'expiredSearch');
+    });
+</script>
+{% endblock %}

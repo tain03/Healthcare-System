@@ -67,6 +67,14 @@ The system includes an AI-powered health assistant that can answer general healt
 1. **Rule-based responses**: Pre-defined responses for common health questions
 2. **LLM-powered responses**: For more complex or unique questions using OpenAI's models
 
+### Chat Features
+
+- 💬 **Patient-Doctor Chat**: Direct communication between patients and their doctors
+- 🤖 **AI Health Assistant**: AI-powered chat for answering health-related questions
+- ⭐ **Rating System**: Users can rate AI responses and provide feedback
+- 📱 **Real-time Updates**: Messages update in real-time without page refresh
+- 📊 **Unread Message Tracking**: Visual indicators for unread messages
+
 ### OpenAI Integration
 
 The system supports integration with OpenAI's powerful language models, including the efficient gpt-4o-mini model:
