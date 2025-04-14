@@ -30,22 +30,28 @@ urlpatterns = [
     path('appointment/update-status/<int:appointment_id>/', views.update_appointment_status, name='update_appointment_status'),
 
     # Nurse URLs
+    path('nurse/dashboard/', views.nurse_dashboard, name='nurse_dashboard'),
     path('nurse/patients/', views.nurse_patients, name='nurse_patients'),
     path('nurse/appointments/', views.nurse_appointments, name='nurse_appointments'),
+    path('nurse/update-vitals/<int:patient_id>/', views.update_patient_vitals, name='update_patient_vitals'),
 
     # Admin URLs
     path('admin/users/', views.admin_users, name='admin_users'),
     path('admin/add-user/', views.admin_add_user, name='admin_add_user'),
+    path('admin/toggle-user-status/', views.admin_toggle_user_status, name='admin_toggle_user_status'),
 
     # Pharmacist URLs
+    path('pharmacist/dashboard/', views.pharmacist_dashboard, name='pharmacist_dashboard'),
     path('pharmacist/prescriptions/', views.pharmacist_prescriptions, name='pharmacist_prescriptions'),
     path('pharmacist/fill-prescription/<int:prescription_id>/', views.fill_prescription, name='fill_prescription'),
 
     # Lab Technician URLs
+    path('lab/dashboard/', views.lab_tech_dashboard, name='lab_tech_dashboard'),
     path('lab/tests/', views.lab_tests, name='lab_tests'),
     path('lab/update-test/<int:test_id>/', views.update_lab_test, name='update_lab_test'),
 
     # Insurance Provider URLs
+    path('insurance/dashboard/', views.insurance_dashboard, name='insurance_dashboard'),
     path('insurance/claims/', views.insurance_claims, name='insurance_claims'),
     path('insurance/process-claim/<int:claim_id>/', views.process_claim, name='process_claim'),
 ]

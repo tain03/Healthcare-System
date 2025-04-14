@@ -1,0 +1,148 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Update Lab Test - Healthcare System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>Update Lab Test</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'core:lab_tests' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Lab Tests
+            </a>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">{{ test.test_name }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <p><strong>Patient:</strong> {{ test.patient }}</p>
+                            <p><strong>Doctor:</strong> {{ test.doctor }}</p>
+                            <p><strong>Ordered Date:</strong> {{ test.ordered_date }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Status:</strong> 
+                                {% if test.status == 'ordered' %}
+                                <span class="badge bg-primary">{{ test.get_status_display }}</span>
+                                {% elif test.status == 'in_progress' %}
+                                <span class="badge bg-info">{{ test.get_status_display }}</span>
+                                {% elif test.status == 'completed' %}
+                                <span class="badge bg-success">{{ test.get_status_display }}</span>
+                                {% elif test.status == 'cancelled' %}
+                                <span class="badge bg-danger">{{ test.get_status_display }}</span>
+                                {% endif %}
+                            </p>
+                            {% if test.result_date %}
+                            <p><strong>Result Date:</strong> {{ test.result_date }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6 class="mb-0">Test Description</h6>
+                        </div>
+                        <div class="card-body">
+                            {{ test.description }}
+                        </div>
+                    </div>
+                    
+                    <form method="post" action="{% url 'core:update_lab_test' test.id %}">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="status" class="form-label">Update Status</label>
+                            <select class="form-select" id="status" name="status" required>
+                                <option value="">-- Select Status --</option>
+                                <option value="ordered" {% if test.status == 'ordered' %}selected{% endif %}>Ordered</option>
+                                <option value="in_progress" {% if test.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                                <option value="completed" {% if test.status == 'completed' %}selected{% endif %}>Completed</option>
+                                <option value="cancelled" {% if test.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3" id="resultDateContainer" {% if test.status != 'completed' %}style="display: none;"{% endif %}>
+                            <label for="result_date" class="form-label">Result Date</label>
+                            <input type="date" class="form-control" id="result_date" name="result_date" value="{{ test.result_date|date:'Y-m-d' }}">
+                        </div>
+                        
+                        <div class="mb-3" id="resultContainer" {% if test.status != 'completed' %}style="display: none;"{% endif %}>
+                            <label for="result" class="form-label">Test Results</label>
+                            <textarea class="form-control" id="result" name="result" rows="6" placeholder="Enter detailed test results">{{ test.result|default:'' }}</textarea>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Update Lab Test</button>
+                            <a href="{% url 'core:lab_tests' %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const statusSelect = document.getElementById('status');
+        const resultDateContainer = document.getElementById('resultDateContainer');
+        const resultContainer = document.getElementById('resultContainer');
+        const resultDateInput = document.getElementById('result_date');
+        
+        // Show/hide result fields based on status
+        statusSelect.addEventListener('change', function() {
+            if (this.value === 'completed') {
+                resultDateContainer.style.display = 'block';
+                resultContainer.style.display = 'block';
+                
+                // Set default date to today if empty
+                if (!resultDateInput.value) {
+                    const today = new Date();
+                    const yyyy = today.getFullYear();
+                    const mm = String(today.getMonth() + 1).padStart(2, '0');
+                    const dd = String(today.getDate()).padStart(2, '0');
+                    resultDateInput.value = `${yyyy}-${mm}-${dd}`;
+                }
+            } else {
+                resultDateContainer.style.display = 'none';
+                resultContainer.style.display = 'none';
+            }
+        });
+        
+        // Form validation
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(e) {
+            if (statusSelect.value === 'completed') {
+                if (!resultDateInput.value) {
+                    e.preventDefault();
+                    alert('Please enter a result date for completed tests.');
+                    return;
+                }
+                
+                const resultTextarea = document.getElementById('result');
+                if (!resultTextarea.value.trim()) {
+                    e.preventDefault();
+                    alert('Please enter test results for completed tests.');
+                    return;
+                }
+            }
+            
+            if (statusSelect.value === 'cancelled') {
+                if (!confirm('Are you sure you want to cancel this lab test? This action cannot be undone.')) {
+                    e.preventDefault();
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

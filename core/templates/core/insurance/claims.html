@@ -1,0 +1,222 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Insurance Claims - Healthcare System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Insurance Claims</h1>
+    
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Claims Management</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="nav nav-tabs" id="claimsTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab" aria-controls="pending" aria-selected="true">Pending Claims</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="processed-tab" data-bs-toggle="tab" data-bs-target="#processed" type="button" role="tab" aria-controls="processed" aria-selected="false">Processed Claims</button>
+                        </li>
+                    </ul>
+                    
+                    <div class="tab-content mt-3" id="claimsTabsContent">
+                        <!-- Pending Claims -->
+                        <div class="tab-pane fade show active" id="pending" role="tabpanel" aria-labelledby="pending-tab">
+                            {% if claims %}
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Claim #</th>
+                                            <th>Patient</th>
+                                            <th>Amount</th>
+                                            <th>Submitted Date</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for claim in claims %}
+                                        {% if claim.status == 'submitted' or claim.status == 'in_review' %}
+                                        <tr>
+                                            <td>{{ claim.claim_number }}</td>
+                                            <td>{{ claim.patient }}</td>
+                                            <td>${{ claim.amount_claimed }}</td>
+                                            <td>{{ claim.submitted_date }}</td>
+                                            <td>
+                                                {% if claim.status == 'submitted' %}
+                                                <span class="badge bg-primary">{{ claim.get_status_display }}</span>
+                                                {% elif claim.status == 'in_review' %}
+                                                <span class="badge bg-info">{{ claim.get_status_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'core:process_claim' claim.id %}" class="btn btn-sm btn-primary">Process</a>
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-info">
+                                No pending claims at this time.
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Processed Claims -->
+                        <div class="tab-pane fade" id="processed" role="tabpanel" aria-labelledby="processed-tab">
+                            {% if claims %}
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Claim #</th>
+                                            <th>Patient</th>
+                                            <th>Amount</th>
+                                            <th>Submitted Date</th>
+                                            <th>Processed Date</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for claim in claims %}
+                                        {% if claim.status == 'approved' or claim.status == 'denied' or claim.status == 'paid' %}
+                                        <tr>
+                                            <td>{{ claim.claim_number }}</td>
+                                            <td>{{ claim.patient }}</td>
+                                            <td>${{ claim.amount_claimed }}</td>
+                                            <td>{{ claim.submitted_date }}</td>
+                                            <td>{{ claim.processed_date }}</td>
+                                            <td>
+                                                {% if claim.status == 'approved' %}
+                                                <span class="badge bg-success">{{ claim.get_status_display }}</span>
+                                                {% elif claim.status == 'denied' %}
+                                                <span class="badge bg-danger">{{ claim.get_status_display }}</span>
+                                                {% elif claim.status == 'paid' %}
+                                                <span class="badge bg-success">{{ claim.get_status_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#claimModal{{ claim.id }}">
+                                                    View Details
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-info">
+                                No processed claims at this time.
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Claim Details Modals -->
+{% for claim in claims %}
+{% if claim.status == 'approved' or claim.status == 'denied' or claim.status == 'paid' %}
+<div class="modal fade" id="claimModal{{ claim.id }}" tabindex="-1" aria-labelledby="claimModalLabel{{ claim.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="claimModalLabel{{ claim.id }}">Claim #{{ claim.claim_number }} Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Patient:</strong> {{ claim.patient }}</p>
+                        <p><strong>Amount Claimed:</strong> ${{ claim.amount_claimed }}</p>
+                        <p><strong>Submitted Date:</strong> {{ claim.submitted_date }}</p>
+                        <p><strong>Processed Date:</strong> {{ claim.processed_date }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Status:</strong> 
+                            {% if claim.status == 'approved' %}
+                            <span class="badge bg-success">{{ claim.get_status_display }}</span>
+                            {% elif claim.status == 'denied' %}
+                            <span class="badge bg-danger">{{ claim.get_status_display }}</span>
+                            {% elif claim.status == 'paid' %}
+                            <span class="badge bg-success">{{ claim.get_status_display }}</span>
+                            {% endif %}
+                        </p>
+                        <p><strong>Bill ID:</strong> {{ claim.bill.id }}</p>
+                        <p><strong>Bill Amount:</strong> ${{ claim.bill.amount }}</p>
+                        <p><strong>Bill Status:</strong> {{ claim.bill.get_status_display }}</p>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <h6>Notes:</h6>
+                    <div class="card">
+                        <div class="card-body">
+                            {{ claim.notes|default:"No notes available." }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                {% if claim.status == 'approved' and claim.status != 'paid' %}
+                <form method="post" action="{% url 'core:process_claim' claim.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="status" value="paid">
+                    <button type="submit" class="btn btn-success">Mark as Paid</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add search functionality to the tables
+        const addTableSearch = function(tableId, inputId) {
+            const searchInput = document.createElement('input');
+            searchInput.type = 'text';
+            searchInput.id = inputId;
+            searchInput.classList.add('form-control', 'mb-3');
+            searchInput.placeholder = 'Search claims...';
+            
+            const table = document.querySelector(tableId);
+            if (table) {
+                table.parentNode.insertBefore(searchInput, table);
+                
+                searchInput.addEventListener('keyup', function() {
+                    const searchText = this.value.toLowerCase();
+                    const rows = table.querySelectorAll('tbody tr');
+                    
+                    rows.forEach(row => {
+                        const text = row.textContent.toLowerCase();
+                        row.style.display = text.includes(searchText) ? '' : 'none';
+                    });
+                });
+            }
+        };
+        
+        // Add search to both tables
+        addTableSearch('#pending table', 'pendingSearch');
+        addTableSearch('#processed table', 'processedSearch');
+    });
+</script>
+{% endblock %}
