@@ -11,6 +11,11 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+
+# Load environment variables from .env file
+from dotenv import load_dotenv
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -134,17 +139,22 @@ AUTH_USER_MODEL = 'core.User'
 
 # LLM Settings
 # Set to True to use API, False to use local model
-LLM_USE_API = False
+LLM_USE_API = True
+# API provider ('openai', 'generic')
+LLM_API_PROVIDER = 'openai'
 # API key for external LLM service (if using API)
-LLM_API_KEY = ''
-# API URL for external LLM service (if using API)
+# Get API key from environment variable or use empty string as default
+LLM_API_KEY = os.environ.get('OPENAI_API_KEY', '')
+# API URL for external LLM service (if using generic API)
 LLM_API_URL = 'http://localhost:8000/v1/completions'
 # Model name (used for both API and local model)
-LLM_MODEL_NAME = 'TinyLlama/TinyLlama-1.1B-Chat-v1.0'  # A small model that can run on modest hardware
+# For OpenAI, use models like 'gpt-3.5-turbo' or 'gpt-4'
+LLM_MODEL_NAME = 'gpt-4o-mini'
 # Maximum tokens to generate
 LLM_MAX_TOKENS = 256
 # Temperature for generation (higher = more creative, lower = more deterministic)
 LLM_TEMPERATURE = 0.7
 # Probability threshold for rule-based vs LLM responses (0.0-1.0)
 # Higher values will use rule-based responses more often
-LLM_RULE_THRESHOLD = 1.0  # Always use rule-based responses
+# Set to 0.0 to always use LLM responses
+LLM_RULE_THRESHOLD = 0.0  # Always use LLM responses

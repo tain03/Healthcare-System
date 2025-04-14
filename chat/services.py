@@ -7,6 +7,13 @@ import logging
 import requests
 from django.conf import settings
 
+# Import OpenAI
+try:
+    import openai
+    OPENAI_AVAILABLE = True
+except ImportError:
+    OPENAI_AVAILABLE = False
+
 # Set up logging
 logger = logging.getLogger(__name__)
 
@@ -21,6 +28,19 @@ class LLMService:
         self.model_name = getattr(settings, 'LLM_MODEL_NAME', 'llama2-7b-chat')
         self.max_tokens = getattr(settings, 'LLM_MAX_TOKENS', 256)
         self.temperature = getattr(settings, 'LLM_TEMPERATURE', 0.7)
+
+        # OpenAI specific settings
+        self.api_provider = getattr(settings, 'LLM_API_PROVIDER', 'generic')
+        self.openai_client = None
+
+        # Initialize OpenAI client if using OpenAI
+        if self.use_api and self.api_provider == 'openai' and OPENAI_AVAILABLE and self.api_key:
+            try:
+                self.openai_client = openai.OpenAI(api_key=self.api_key)
+                logger.info(f"OpenAI client initialized with model: {self.model_name}")
+            except Exception as e:
+                logger.error(f"Error initializing OpenAI client: {str(e)}")
+                self.openai_client = None
 
         # For local model (using transformers library)
         self.model = None
@@ -80,8 +100,45 @@ class LLMService:
             logger.error(f"Error generating response: {str(e)}")
             return "I apologize, but I'm having trouble processing your question right now."
 
+    def _generate_openai(self, prompt):
+        """Generate a response using OpenAI API."""
+        if not self.openai_client:
+            logger.error("OpenAI client not initialized")
+            return "Sorry, I'm not properly configured to answer questions right now."
+
+        try:
+            # Create a system message for healthcare context
+            messages = [
+                {"role": "system", "content": "You are an AI health assistant in a healthcare system. Provide helpful, accurate, and concise responses to health-related questions. Always remind users to consult healthcare professionals for personalized advice."},
+                {"role": "user", "content": prompt}
+            ]
+
+            # Call the OpenAI API
+            response = self.openai_client.chat.completions.create(
+                model=self.model_name,
+                messages=messages,
+                max_tokens=self.max_tokens,
+                temperature=self.temperature,
+            )
+
+            # Extract the response text
+            if response.choices and len(response.choices) > 0:
+                return response.choices[0].message.content.strip()
+            else:
+                logger.error("Empty response from OpenAI API")
+                return "I'm having trouble generating a response. Please try again later."
+
+        except Exception as e:
+            logger.error(f"OpenAI API error: {str(e)}")
+            return "I'm having trouble connecting to my knowledge base. Please try again later."
+
     def _generate_api(self, prompt):
         """Generate a response using an API."""
+        # Use OpenAI if configured
+        if self.api_provider == 'openai' and OPENAI_AVAILABLE and self.openai_client:
+            return self._generate_openai(prompt)
+
+        # Fall back to generic API
         if not self.api_key:
             logger.error("API key not configured")
             return "Sorry, I'm not properly configured to answer questions right now."
@@ -127,13 +184,18 @@ class LLMService:
         if rule_threshold >= 1.0:
             return "I'm currently operating in rule-based mode only. For more complex questions, please consult with a healthcare professional."
 
-        # Add healthcare context to the prompt
-        healthcare_prompt = (
-            f"You are an AI health assistant in a healthcare system. "
-            f"Provide a helpful, accurate, and concise response to this health-related question: {prompt}\n\n"
-            f"Keep your answer brief and focused on providing general health information. "
-            f"Always remind the user to consult healthcare professionals for personalized advice."
-        )
+        # For OpenAI, we'll use the system message in _generate_openai
+        # For other APIs, add healthcare context to the prompt
+        healthcare_prompt = prompt
+
+        # If not using OpenAI, add context to the prompt
+        if not (self.use_api and self.api_provider == 'openai' and OPENAI_AVAILABLE and self.openai_client):
+            healthcare_prompt = (
+                f"You are an AI health assistant in a healthcare system. "
+                f"Provide a helpful, accurate, and concise response to this health-related question: {prompt}\n\n"
+                f"Keep your answer brief and focused on providing general health information. "
+                f"Always remind the user to consult healthcare professionals for personalized advice."
+            )
 
         start_time = time.time()
 
