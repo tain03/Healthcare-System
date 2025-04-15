@@ -2,27 +2,25 @@
 
 {% block extra_css %}
 <style>
+    /* Inherit main color scheme from base template */
     :root {
-        --primary-color: #4361ee;
-        --primary-light: #eef2ff;
-        --secondary-color: #3f37c9;
-        --success-color: #4cc9f0;
-        --danger-color: #f72585;
-        --warning-color: #f8961e;
-        --light-gray: #f8f9fa;
-        --medium-gray: #e9ecef;
-        --dark-gray: #6c757d;
-        --border-color: #dee2e6;
+        /* Chat-specific colors */
         --message-self: #e0f7fa;
         --message-other: #ffffff;
         --message-ai: #f0f7ff;
-        --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
-        --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
-        --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+
+        /* Shadows */
+        --shadow-sm: 0 2px 4px rgba(18, 38, 63, 0.05);
+        --shadow-md: 0 4px 6px rgba(18, 38, 63, 0.07);
+        --shadow-lg: 0 10px 15px rgba(18, 38, 63, 0.1);
+
+        /* Radius */
         --radius-sm: 8px;
         --radius-md: 12px;
         --radius-lg: 16px;
         --radius-xl: 24px;
+
+        /* Transitions */
         --transition: all 0.3s ease;
     }
 
@@ -62,12 +60,12 @@
     }
 
     .chat-list-item.active {
-        background-color: rgba(67, 97, 238, 0.1);
-        border-left: 3px solid var(--primary-color);
+        background-color: var(--primary-light);
+        border-left: 3px solid var(--primary);
     }
 
     .chat-list-item .unread-badge {
-        background-color: var(--primary-color);
+        background-color: var(--primary);
         color: white;
         border-radius: 50%;
         padding: 2px 6px;
@@ -122,8 +120,8 @@
         background-color: var(--message-self);
         border-radius: var(--radius-md) 0 var(--radius-md) var(--radius-md);
         padding: 12px 16px;
-        color: #333;
-        border-right: 3px solid var(--primary-color);
+        color: var(--dark-text);
+        border-right: 3px solid var(--primary);
     }
 
     .message-other {
@@ -131,8 +129,8 @@
         background-color: var(--message-other);
         border-radius: 0 var(--radius-md) var(--radius-md) var(--radius-md);
         padding: 12px 16px;
-        color: #333;
-        border-left: 3px solid var(--dark-gray);
+        color: var(--dark-text);
+        border-left: 3px solid var(--muted-text);
     }
 
     .message-ai {
@@ -140,8 +138,8 @@
         background-color: var(--message-ai);
         border-radius: 0 var(--radius-md) var(--radius-md) var(--radius-md);
         padding: 12px 16px;
-        color: #333;
-        border-left: 3px solid var(--success-color);
+        color: var(--dark-text);
+        border-left: 3px solid var(--success);
     }
 
     .message-content {
@@ -168,8 +166,8 @@
     }
 
     .chat-input .form-control:focus {
-        box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
-        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(44, 123, 229, 0.2);
+        border-color: var(--primary);
     }
 
     .chat-input .btn {
@@ -179,13 +177,14 @@
     }
 
     .chat-input .btn-primary {
-        background-color: var(--primary-color);
-        border-color: var(--primary-color);
+        background-color: var(--primary);
+        border-color: var(--primary);
     }
 
     .chat-input .btn-primary:hover {
-        background-color: var(--secondary-color);
-        border-color: var(--secondary-color);
+        background-color: var(--primary);
+        border-color: var(--primary);
+        opacity: 0.9;
     }
 
     .attachment-preview {
@@ -319,8 +318,8 @@
     }
 
     .form-control:focus, .form-select:focus {
-        box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
-        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(44, 123, 229, 0.2);
+        border-color: var(--primary);
     }
 
     /* Badge styling */
@@ -331,7 +330,7 @@
     }
 
     .badge.bg-info {
-        background-color: var(--success-color) !important;
+        background-color: var(--info) !important;
     }
 
     /* Image styling */
@@ -374,6 +373,6 @@
         return date.toLocaleString();
     }
 
-    {% block chat_scripts %}{% endblock %}
+    // {% block chat_scripts %}{% endblock %}
 </script>
 {% endblock %}

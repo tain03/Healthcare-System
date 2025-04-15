@@ -3,107 +3,205 @@
 {% block title %}Home - Healthcare System{% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="container py-5">
     <div class="row">
         <div class="col-md-12 text-center mb-5">
-            <h1 class="display-4">Welcome to Healthcare System</h1>
+            <i class="fas fa-heartbeat text-primary fa-4x mb-3"></i>
+            <h1 class="display-4 fw-bold">Welcome to Healthcare System</h1>
             <p class="lead">A comprehensive healthcare management solution for patients, doctors, and healthcare providers.</p>
+            <div class="d-flex justify-content-center mt-4">
+                {% if not user.is_authenticated %}
+                <a href="{% url 'core:register' %}" class="btn btn-primary btn-lg me-3">
+                    <i class="fas fa-user-plus me-2"></i>Get Started
+                </a>
+                <a href="{% url 'core:login' %}" class="btn btn-outline-primary btn-lg">
+                    <i class="fas fa-sign-in-alt me-2"></i>Login
+                </a>
+                {% else %}
+                <a href="{% url 'core:dashboard' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                </a>
+                {% endif %}
+            </div>
         </div>
     </div>
 
-    <div class="row">
+    <div class="row py-4">
+        <div class="col-md-12 text-center mb-4">
+            <h2 class="fw-bold">Who We Serve</h2>
+            <p class="text-muted">Our platform is designed for all healthcare stakeholders</p>
+        </div>
         <div class="col-md-4 mb-4">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <h3 class="card-title">For Patients</h3>
-                    <p class="card-text">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="icon-circle bg-primary-light text-primary mb-3 mx-auto">
+                        <i class="fas fa-user-injured fa-2x"></i>
+                    </div>
+                    <h3 class="card-title fw-bold">For Patients</h3>
+                    <p class="card-text text-muted">
                         Book appointments, view medical records, manage prescriptions, and pay bills online.
                     </p>
                     {% if not user.is_authenticated %}
-                    <a href="{% url 'core:register' %}" class="btn btn-primary">Register as Patient</a>
+                    <a href="{% url 'core:register' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-user-plus me-2"></i>Register as Patient
+                    </a>
                     {% elif user.user_type == 'patient' %}
-                    <a href="{% url 'core:dashboard' %}" class="btn btn-primary">Go to Dashboard</a>
+                    <a href="{% url 'core:dashboard' %}" class="btn btn-primary">
+                        <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                    </a>
                     {% endif %}
                 </div>
             </div>
         </div>
 
         <div class="col-md-4 mb-4">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <h3 class="card-title">For Doctors</h3>
-                    <p class="card-text">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="icon-circle bg-primary-light text-primary mb-3 mx-auto">
+                        <i class="fas fa-user-md fa-2x"></i>
+                    </div>
+                    <h3 class="card-title fw-bold">For Doctors</h3>
+                    <p class="card-text text-muted">
                         Manage appointments, access patient records, prescribe treatments, and order lab tests.
                     </p>
                     {% if not user.is_authenticated %}
-                    <a href="{% url 'core:register' %}" class="btn btn-primary">Register as Doctor</a>
+                    <a href="{% url 'core:register' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-user-plus me-2"></i>Register as Doctor
+                    </a>
                     {% elif user.user_type == 'doctor' %}
-                    <a href="{% url 'core:dashboard' %}" class="btn btn-primary">Go to Dashboard</a>
+                    <a href="{% url 'core:dashboard' %}" class="btn btn-primary">
+                        <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                    </a>
                     {% endif %}
                 </div>
             </div>
         </div>
 
         <div class="col-md-4 mb-4">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <h3 class="card-title">For Healthcare Staff</h3>
-                    <p class="card-text">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="icon-circle bg-primary-light text-primary mb-3 mx-auto">
+                        <i class="fas fa-hospital-user fa-2x"></i>
+                    </div>
+                    <h3 class="card-title fw-bold">For Healthcare Staff</h3>
+                    <p class="card-text text-muted">
                         Specialized interfaces for nurses, administrators, pharmacists, lab technicians, and insurance providers.
                     </p>
                     {% if not user.is_authenticated %}
-                    <a href="{% url 'core:register' %}" class="btn btn-primary">Register as Staff</a>
+                    <a href="{% url 'core:register' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-user-plus me-2"></i>Register as Staff
+                    </a>
                     {% elif user.user_type != 'patient' and user.user_type != 'doctor' %}
-                    <a href="{% url 'core:dashboard' %}" class="btn btn-primary">Go to Dashboard</a>
+                    <a href="{% url 'core:dashboard' %}" class="btn btn-primary">
+                        <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                    </a>
                     {% endif %}
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row mt-5">
-        <div class="col-md-12">
-            <h2 class="text-center mb-4">Our Features</h2>
+    <div class="row py-5 bg-light mt-5 rounded-3">
+        <div class="col-md-12 text-center mb-4">
+            <h2 class="fw-bold">Our Features</h2>
+            <p class="text-muted">Comprehensive tools to manage your healthcare needs</p>
         </div>
         <div class="col-md-6 mb-4">
-            <div class="card">
-                <div class="card-body">
-                    <h4 class="card-title">Appointment Scheduling</h4>
-                    <p class="card-text">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="icon-circle bg-primary-light text-primary me-3">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <h4 class="card-title mb-0 fw-bold">Appointment Scheduling</h4>
+                    </div>
+                    <p class="card-text text-muted">
                         Easy and convenient online appointment booking system. Choose your preferred doctor and time slot.
                     </p>
                 </div>
             </div>
         </div>
         <div class="col-md-6 mb-4">
-            <div class="card">
-                <div class="card-body">
-                    <h4 class="card-title">Electronic Health Records</h4>
-                    <p class="card-text">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="icon-circle bg-primary-light text-primary me-3">
+                            <i class="fas fa-notes-medical"></i>
+                        </div>
+                        <h4 class="card-title mb-0 fw-bold">Electronic Health Records</h4>
+                    </div>
+                    <p class="card-text text-muted">
                         Secure access to your complete medical history, diagnoses, treatments, and test results.
                     </p>
                 </div>
             </div>
         </div>
         <div class="col-md-6 mb-4">
-            <div class="card">
-                <div class="card-body">
-                    <h4 class="card-title">Prescription Management</h4>
-                    <p class="card-text">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="icon-circle bg-primary-light text-primary me-3">
+                            <i class="fas fa-prescription"></i>
+                        </div>
+                        <h4 class="card-title mb-0 fw-bold">Prescription Management</h4>
+                    </div>
+                    <p class="card-text text-muted">
                         Digital prescriptions that can be sent directly to pharmacies. View your medication history anytime.
                     </p>
                 </div>
             </div>
         </div>
         <div class="col-md-6 mb-4">
-            <div class="card">
-                <div class="card-body">
-                    <h4 class="card-title">Billing and Insurance</h4>
-                    <p class="card-text">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="icon-circle bg-primary-light text-primary me-3">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                        </div>
+                        <h4 class="card-title mb-0 fw-bold">Billing and Insurance</h4>
+                    </div>
+                    <p class="card-text text-muted">
                         Transparent billing system with insurance claim processing and online payment options.
                     </p>
                 </div>
             </div>
+        </div>
+        <div class="col-md-12 text-center mt-4">
+            <a href="{% url 'core:register' %}" class="btn btn-primary btn-lg">
+                <i class="fas fa-rocket me-2"></i>Get Started Today
+            </a>
+        </div>
+    </div>
+
+    <!-- AI Chat Feature Section -->
+    <div class="row py-5 mt-5">
+        <div class="col-md-6">
+            <h2 class="fw-bold mb-4">AI-Powered Health Assistant</h2>
+            <p class="lead">Get instant answers to your health questions with our advanced AI chat system.</p>
+            <ul class="list-unstyled mt-4">
+                <li class="mb-3">
+                    <i class="fas fa-check-circle text-success me-2"></i>
+                    <strong>24/7 Availability</strong> - Get health information anytime, anywhere
+                </li>
+                <li class="mb-3">
+                    <i class="fas fa-check-circle text-success me-2"></i>
+                    <strong>Personalized Responses</strong> - Tailored to your specific health concerns
+                </li>
+                <li class="mb-3">
+                    <i class="fas fa-check-circle text-success me-2"></i>
+                    <strong>Medical Knowledge</strong> - Powered by the latest healthcare information
+                </li>
+                <li class="mb-3">
+                    <i class="fas fa-check-circle text-success me-2"></i>
+                    <strong>Private & Secure</strong> - Your conversations remain confidential
+                </li>
+            </ul>
+            <a href="{% url 'chat:home' %}" class="btn btn-primary mt-3">
+                <i class="fas fa-robot me-2"></i>Try AI Chat Now
+            </a>
+        </div>
+        <div class="col-md-6 text-center">
+            <img src="https://via.placeholder.com/500x400?text=AI+Health+Assistant" alt="AI Health Assistant" class="img-fluid rounded shadow-sm">
         </div>
     </div>
 </div>
