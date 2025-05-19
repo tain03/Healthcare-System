@@ -1,167 +1,120 @@
-# 🏥 Healthcare System
+# Healthcare System Microservices
 
-A comprehensive Django-based healthcare management system with AI-powered chat functionality.
+This project is a microservices-based healthcare system that provides user management, appointment scheduling, and AI-powered chat functionality.
 
-## 📋 Features
+## Architecture
 
-- 👩‍⚕️ User roles (Patients, Doctors, Administrators)
-- 📊 Patient health records management
-- 🗓️ Appointment scheduling
-- 💬 Chat system for patient-doctor communication
-- 🤖 AI-powered health assistant
-- 📱 Responsive design for mobile and desktop
+The system consists of three main microservices:
 
-## 🚀 Getting Started
+1. **Core Service** (Port 8000)
+   - Handles user management
+   - Manages appointments
+   - Uses PostgreSQL for data storage
 
-### Prerequisites
+2. **Chat Service** (Port 8001)
+   - Provides AI-powered chat functionality
+   - Integrates with OpenAI's GPT-3.5
+   - Uses PostgreSQL for chat history storage
 
-- Python 3.8+
-- Django 5.0+
-- Other dependencies listed in requirements.txt
+3. **API Gateway** (Port 8080)
+   - Single entry point for all client requests
+   - Routes requests to appropriate microservices
+   - Handles cross-cutting concerns
 
-### Installation
+## Prerequisites
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/healthcare-system.git
-   cd healthcare-system
-   ```
+- Docker and Docker Compose
+- Python 3.9+
+- OpenAI API key
 
-2. Create a virtual environment:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
+## Environment Variables
 
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+Create a `.env` file in the root directory with the following variables:
 
-4. Set up environment variables:
-   - Copy `.env.example` to `.env`
-   - Add your OpenAI API key to the `.env` file:
-     ```
-     OPENAI_API_KEY=your_openai_api_key_here
-     ```
-
-5. Run migrations:
-   ```bash
-   python manage.py migrate
-   ```
-
-6. Create a superuser:
-   ```bash
-   python manage.py createsuperuser
-   ```
-
-7. Run the development server:
-   ```bash
-   python manage.py runserver
-   ```
-
-## 🤖 AI Chat Integration
-
-The system includes an AI-powered health assistant that can answer general health questions. This feature uses a hybrid approach:
-
-1. **Rule-based responses**: Pre-defined responses for common health questions
-2. **LLM-powered responses**: For more complex or unique questions using OpenAI's models
-
-### Chat Features
-
-- 💬 **Patient-Doctor Chat**: Direct communication between patients and their doctors
-- 🤖 **AI Health Assistant**: AI-powered chat for answering health-related questions
-- ⭐ **Rating System**: Users can rate AI responses and provide feedback
-- 📱 **Real-time Updates**: Messages update in real-time without page refresh
-- 📊 **Unread Message Tracking**: Visual indicators for unread messages
-
-### OpenAI Integration
-
-The system supports integration with OpenAI's powerful language models, including the efficient gpt-4o-mini model:
-
-1. Install the OpenAI package:
-   ```bash
-   pip install openai
-   ```
-
-2. Configure OpenAI:
-   - The system uses environment variables for API keys
-   - Make sure your `.env` file contains your OpenAI API key:
-     ```
-     OPENAI_API_KEY=your_openai_api_key_here
-     ```
-   - The settings.py file is already configured to use this environment variable:
-     ```python
-     # LLM Settings
-     LLM_USE_API = True
-     LLM_API_PROVIDER = 'openai'
-     LLM_API_KEY = os.environ.get('OPENAI_API_KEY', '')
-     LLM_MODEL_NAME = 'gpt-4o-mini'  # Efficient and powerful model
-     LLM_RULE_THRESHOLD = 0.0  # Always use LLM responses
-     ```
-
-3. Run the setup script:
-   ```bash
-   # The script will use the API key from your environment variables
-   python healthcare_system/setup_llm.py --use-api --api-provider openai --model gpt-4o-mini
-   ```
-
-4. Test the OpenAI integration:
-   ```bash
-   python healthcare_system/test_openai.py
-   ```
-
-5. Quick test with a direct script:
-   ```bash
-   python test_openai_direct.py
-   ```
-
-For more information about the LLM integration, see `healthcare_system/LLM_INTEGRATION.md`.
-
-## 📱 Usage
-
-1. Access the admin interface at http://localhost:8000/admin/
-2. Log in with your superuser credentials
-3. Create users with different roles (patients, doctors)
-4. Access the main application at http://localhost:8000/
-
-## 🔒 Security Considerations
-
-### Protecting API Keys
-
-This project uses environment variables to protect sensitive information like API keys:
-
-1. **Environment Variables**: API keys are loaded from environment variables using python-dotenv
-2. **Local Development**: Store your API keys in a `.env` file (not committed to Git)
-3. **Before Pushing to GitHub**:
-   - Make sure your `.env` file is in `.gitignore`
-   - Clean up `__pycache__` directories that might contain compiled settings with API keys:
-     ```bash
-     python clean_pycache.py
-     ```
-   - Or install the pre-commit hook:
-     ```bash
-     # On Linux/Mac
-     cp pre-commit .git/hooks/
-     chmod +x .git/hooks/pre-commit
-
-     # On Windows
-     copy pre-commit .git\hooks\
-     ```
-
-## 🧪 Testing
-
-Run the test suite:
-```bash
-python manage.py test
+```env
+OPENAI_API_KEY=your_openai_api_key
 ```
 
-## 📄 License
+## Running the Services
+
+1. Build and start all services:
+```bash
+docker-compose up --build
+```
+
+2. Access the services:
+   - API Gateway: http://localhost:8080
+   - Core Service: http://localhost:8000
+   - Chat Service: http://localhost:8001
+
+## API Documentation
+
+Once the services are running, you can access the API documentation at:
+- API Gateway: http://localhost:8080/docs
+- Core Service: http://localhost:8000/docs
+- Chat Service: http://localhost:8001/docs
+
+## Features
+
+### User Management
+- Create and manage user accounts
+- Different user roles (doctor, patient, admin)
+- User authentication and authorization
+
+### Appointment Management
+- Schedule appointments
+- View appointment history
+- Update appointment status
+
+### AI Chat
+- Real-time chat with AI assistant
+- Healthcare-specific responses
+- Chat history storage
+
+## Development
+
+### Project Structure
+```
+healthcare_system/
+├── docker-compose.yml
+├── services/
+│   ├── core-service/
+│   │   ├── Dockerfile
+│   │   ├── requirements.txt
+│   │   ├── main.py
+│   │   ├── models.py
+│   │   ├── schemas.py
+│   │   └── database.py
+│   ├── chat-service/
+│   │   ├── Dockerfile
+│   │   ├── requirements.txt
+│   │   ├── main.py
+│   │   ├── models.py
+│   │   ├── schemas.py
+│   │   └── database.py
+│   └── api-gateway/
+│       ├── Dockerfile
+│       ├── requirements.txt
+│       └── main.py
+└── README.md
+```
+
+### Adding New Features
+
+1. Identify which service should handle the new feature
+2. Add necessary models and schemas
+3. Implement the feature in the service
+4. Add corresponding endpoints in the API Gateway
+5. Update documentation
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
+
+## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🙏 Acknowledgments
-
-- Django community
-- OpenAI for their powerful language models
-- All contributors to this project
