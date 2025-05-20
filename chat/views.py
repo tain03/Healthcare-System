@@ -247,11 +247,14 @@ def send_message(request, conversation_id):
             ai_response = generate_ai_response(content)
             response_time = time.time() - start_time
 
+            # Format the AI response with HTML line breaks
+            formatted_response = ai_response.replace('\n\n', '<br><br>').replace('\n', '<br>')
+
             # Create AI message
             ai_message = Message.objects.create(
                 conversation=conversation,
                 sender=None,  # AI has no sender
-                content=ai_response,
+                content=formatted_response,
                 message_type='ai_response',
                 is_read=True  # Mark as read immediately
             )
@@ -278,7 +281,7 @@ def send_message(request, conversation_id):
                 'message_data': message_data,
                 'ai_response': {
                     'id': ai_message.id,
-                    'content': ai_response,
+                    'content': formatted_response,
                     'timestamp': ai_message.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
                     'response_type': response_type
                 }
@@ -416,11 +419,14 @@ def generate_ai_response(prompt):
 1. Provide accurate, helpful, and concise responses to health-related questions
 2. Always prioritize patient safety and well-being
 3. Be empathetic and professional in your communication
-4. Clearly indicate when medical advice should be sought from healthcare professionals
-5. Use simple, clear language that patients can understand
-6. Focus on providing general health information and guidance
-7. Never make definitive diagnoses or prescribe treatments
-8. Always response in one or two sentences and less than 50 wordswords.
+4. Use simple, clear language that patients can understand
+5. Focus on providing general health information and guidance
+6. Never make definitive diagnoses or prescribe treatments
+7. Keep responses brief and to the point
+8. Avoid redundant advice about consulting healthcare professionals (this will be added automatically)
+9. Format your response with single line breaks between sentences
+10. Keep each point concise and easy to read
+11. Always response in one or two sentences and less than 50 words.
 
 Please respond to the following question while keeping these guidelines in mind:"""
 
@@ -557,12 +563,18 @@ Please respond to the following question while keeping these guidelines in mind:
         # Add a disclaimer to LLM responses
         disclaimer = "\n\nRemember, this is general information. Please consult a healthcare professional for personalized advice."
 
+        # Format the response with line breaks
+        formatted_response = llm_response.replace(". ", ".\n").replace("! ", "!\n").replace("? ", "?\n")
+        
+        # Remove any double line breaks that might have been created
+        formatted_response = formatted_response.replace("\n\n", "\n")
+        
         # Check if response is too long and truncate if necessary
         max_length = 500  # Maximum character length for response
-        if len(llm_response) > max_length:
-            llm_response = llm_response[:max_length] + "..."
+        if len(formatted_response) > max_length:
+            formatted_response = formatted_response[:max_length] + "..."
 
-        return llm_response + disclaimer
+        return formatted_response + disclaimer
     except Exception as e:
         # Log the error and fall back to rule-based response
         logger.error(f"Error using LLM: {str(e)}. Falling back to rule-based response.")

@@ -173,7 +173,7 @@
         {% if chat_messages %}
             {% for message in chat_messages %}
                 <div class="message {% if message.sender == request.user %}message-self{% elif message.message_type == 'ai_response' %}message-ai{% else %}message-other{% endif %}">
-                    <div class="message-content">{{ message.content }}</div>
+                    <div class="message-content">{{ message.content|safe }}</div>
                     
                     {% if message.message_type == 'ai_response' %}
                     <div class="rating-container mt-2 text-end">
