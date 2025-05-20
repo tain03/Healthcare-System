@@ -371,6 +371,7 @@ messageForm.addEventListener('submit', function(e) {
     // Show user message immediately
     const userMessageDiv = document.createElement('div');
     userMessageDiv.className = 'message message-self';
+    userMessageDiv.setAttribute('data-message-id', 'pending');  // Temporary ID until we get the real one
 
     let messageHTML = `<div class="message-content">${content}</div>`;
 
@@ -422,6 +423,15 @@ messageForm.addEventListener('submit', function(e) {
     .then(response => response.json())
     .then(data => {
         if (data.status === 'success') {
+            // Update the temporary message ID with the real one
+            const pendingMessage = document.querySelector('[data-message-id="pending"]');
+            if (pendingMessage) {
+                pendingMessage.setAttribute('data-message-id', data.message_data.id);
+            }
+
+            // Immediately fetch new messages to sync and prevent duplicates
+            fetchNewMessages();
+
             // Clear input and attachment
             messageContent.value = '';
             attachmentInput.value = '';
@@ -479,9 +489,15 @@ function fetchNewMessages() {
     .then(data => {
         if (data.chat_messages && data.chat_messages.length > 0) {
             data.chat_messages.forEach(message => {
+                // Skip if message already exists in the chat
+                if (document.querySelector(`[data-message-id="${message.id}"]`)) {
+                    return;
+                }
+
                 // Create message element
                 const messageDiv = document.createElement('div');
                 messageDiv.className = `message ${message.is_self ? 'message-self' : (message.message_type === 'ai_response' ? 'message-ai' : 'message-other')}`;
+                messageDiv.setAttribute('data-message-id', message.id);
 
                 let messageHtml = `<div class="message-content">${message.content}</div>`;
 

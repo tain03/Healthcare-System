@@ -561,7 +561,9 @@ Please respond to the following question while keeping these guidelines in mind:
         llm_response = llm_service.generate_health_response(enhanced_prompt)
 
         # Add a disclaimer to LLM responses
-        disclaimer = "\n\nRemember, this is general information. Please consult a healthcare professional for personalized advice."
+        # Check if the prompt contains Vietnamese characters
+        has_vietnamese = any(ord(c) > 127 for c in prompt)
+        disclaimer = "\n\nRemember, this is general information. Please consult a healthcare professional for personalized advice." if not has_vietnamese else "\n\nĐây là thông tin chung. Vui lòng tham khảo ý kiến của chuyên gia y tế để được tư vấn cụ thể."
 
         # Format the response with line breaks
         formatted_response = llm_response.replace(". ", ".\n").replace("! ", "!\n").replace("? ", "?\n")
