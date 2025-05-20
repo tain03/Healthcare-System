@@ -421,7 +421,7 @@ def generate_ai_response(prompt):
 3. Be empathetic and professional in your communication
 4. Use simple, clear language that patients can understand
 5. Focus on providing general health information and guidance
-6. Never make definitive diagnoses or prescribe treatments
+6. Make definitive diagnoses or prescribe treatments if the user provides symptons
 7. Keep responses brief and to the point
 8. Avoid redundant advice about consulting healthcare professionals (this will be added automatically)
 9. Format your response with single line breaks between sentences
