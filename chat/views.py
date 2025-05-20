@@ -411,6 +411,22 @@ def generate_ai_response(prompt):
     # Get the rule threshold from settings
     rule_threshold = getattr(settings, 'LLM_RULE_THRESHOLD', 0.7)
 
+    # Add system prompt to guide the AI's response
+    system_prompt = """You are an AI health assistant in a healthcare system. Your role is to:
+1. Provide accurate, helpful, and concise responses to health-related questions
+2. Always prioritize patient safety and well-being
+3. Be empathetic and professional in your communication
+4. Clearly indicate when medical advice should be sought from healthcare professionals
+5. Use simple, clear language that patients can understand
+6. Focus on providing general health information and guidance
+7. Never make definitive diagnoses or prescribe treatments
+8. Always response in one or two sentences and less than 50 wordswords.
+
+Please respond to the following question while keeping these guidelines in mind:"""
+
+    # Combine system prompt with user's question
+    enhanced_prompt = f"{system_prompt}\n\n{prompt}"
+
     # Simple rule-based responses for common patterns
     prompt_lower = prompt.lower()
 
@@ -536,7 +552,7 @@ def generate_ai_response(prompt):
     # Otherwise, use the LLM
     try:
         logger.info(f"Using LLM for response to: {prompt[:30]}...")
-        llm_response = llm_service.generate_health_response(prompt)
+        llm_response = llm_service.generate_health_response(enhanced_prompt)
 
         # Add a disclaimer to LLM responses
         disclaimer = "\n\nRemember, this is general information. Please consult a healthcare professional for personalized advice."
